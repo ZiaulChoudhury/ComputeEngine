@@ -7,13 +7,9 @@ import datatypes::*;
 import SpecialFIFOs:: * ;
 import Real::*;
 import Vector::*;
+import sum8::*;
 
 #define VectorLength 64
-#define L0 8
-#define L1 4
-#define L2 2
-#define L3 1
-
 
 interface SumTree;
         method Action put0(Vector#(VectorLength, DataType) datas);
@@ -31,65 +27,40 @@ endinterface
 
 (*synthesize*)
 module mkSumTree(SumTree);
-Reg#(Vector#(VectorLength,DataType)) s0[L0];
-Reg#(Vector#(VectorLength,DataType)) s1[L1];
-Reg#(Vector#(VectorLength,DataType)) s2[L2];
-Reg#(Vector#(VectorLength,DataType)) s3[L3];
+Reg#(Vector#(VectorLength,DataType)) s0[8];
 
-for(int i=0;i<L0; i = i + 1) begin
+Sum8 s8[64];
+
+for(int i=0;i<64; i = i + 1)
+	s8[i] <- mkSum8;
+
+for(int i=0;i<8; i = i + 1) begin
 	s0[i] <- mkRegU;
-	if(i < L1)
-	s1[i] <- mkRegU;
-	if(i < L2)
-	s2[i] <- mkRegU;
-	if(i < L3)
-	s3[i] <- mkRegU;
-	
 end
 
 FIFOF#(Bit#(1)) p0 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p1 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p2 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p3 <- mkPipelineFIFOF;
+FIFOF#(Bit#(1)) p4 <- mkPipelineFIFOF;
 
 
-	for(int i=0;i<L1;i=i+1)
-	rule _Q1;
-		Vector#(VectorLength, DataType) d = replicate(0);
-		let a = s0[i];
-		let b = s0[2*i+1];
-		
-		for(int j=0; j < VectorLength; j = j + 1) begin
-			d[i] = fxptTruncate(fxptAdd(a[j],b[j]));	
-		end
-		s1[i] <= unpack(truncate(pack(d)));
+	for(int i = 0; i<64; i = i + 1)
+	rule _sum8;
+		Vector#(8,DataType) d = replicate(0);
+		d[0] = s0[0][i];
+		d[1] = s0[1][i];
+		d[2] = s0[2][i];
+		d[3] = s0[3][i];
+		d[4] = s0[4][i];
+		d[5] = s0[5][i];
+		d[6] = s0[6][i];
+		d[7] = s0[7][i];
+		if( i == 0 || i == 1 || i == 2)
+		$display("--- %d %d %d %d %d %d %d %d ---", fxptGetInt(d[0]), fxptGetInt(d[1]), fxptGetInt(d[2]),fxptGetInt(d[3]), fxptGetInt(d[4]), fxptGetInt(d[5]),fxptGetInt(d[6]), fxptGetInt(d[7])); 
+		s8[i].put(d);
 	endrule
-	
-	for(int i=0;i<L2;i=i+1)
-	rule _Q2;
-		Vector#(VectorLength, DataType) d = replicate(0);
-		let a = s1[i];
-		let b = s1[2*i+1];
 		
-		for(int j=0; j < VectorLength; j = j + 1) begin
-			d[i] = fxptTruncate(fxptAdd(a[i],b[i]));	
-		end
-		s2[i] <= unpack(truncate(pack(d)));
-	endrule
-	
-	for(int i=0;i<L3;i=i+1)
-	rule _Q3;
-		Vector#(VectorLength, DataType) d = replicate(0);
-		let a = s2[i];
-		let b = s2[2*i+1];
-		
-		for(int j=0; j < VectorLength; j = j + 1) begin
-			d[i] = fxptTruncate(fxptAdd(a[i],b[i]));	
-		end
-		s3[i] <= unpack(truncate(pack(d)));
-	endrule
-
-	
 		
 	//################################################ 
 	rule _activate0;
@@ -105,6 +76,11 @@ FIFOF#(Bit#(1)) p3 <- mkPipelineFIFOF;
    	rule _activate2;
                     p2.deq;
 		    p3.enq(1);
+    	endrule
+   	
+	rule _activate24;
+                    p3.deq;
+		    p4.enq(1);
     	endrule
 	
 	//################################################
@@ -141,8 +117,11 @@ FIFOF#(Bit#(1)) p3 <- mkPipelineFIFOF;
 	endmethod
 	
         method ActionValue#(Vector#(VectorLength,DataType)) result;
-			p3.deq;
-			return s3[0];
+			p4.deq;
+			Vector#(VectorLength, DataType) res = newVector;
+			for(int i=0;i<64; i = i + 1)
+				res[i] = s8[i].result;	
+			return res;
 	endmethod
 		
 	method Action clean;
@@ -150,6 +129,7 @@ FIFOF#(Bit#(1)) p3 <- mkPipelineFIFOF;
 		p1.clear;
 		p2.clear;
 		p3.clear;
+		p4.clear;
 	endmethod	
 endmodule
 endpackage

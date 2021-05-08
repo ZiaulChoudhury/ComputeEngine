@@ -8,12 +8,13 @@ import SpecialFIFOs:: * ;
 import Real::*;
 import Vector::*;
 import cacheFIFO::*;
-import sum8::*;
+import sumTree::*;
 
+#define LEN 128
+#define SHIFT 5
 interface Line3;
 	method Action putFmap(DataType datas);
-	//method ActionValue#(Vector#(64,DataType)) get;
-	method ActionValue#(DataType) get;
+	method ActionValue#(Vector#(64,DataType)) get;
 	method Action reset(Width imageSize);	
         method Action clean;
 endinterface
@@ -24,6 +25,9 @@ module mkLine3(Line3);
 //############### CONFIG PARAMETERS ######################################
 Reg#(Width)     alpha      <-  mkReg(8);
 Reg#(Width)     img        <-  mkReg(0);
+SumTree 	sum 	   <- mkSumTree;
+FIFOF#(Vector#(8,DataType)) cQ[8];
+FIFOF#(Vector#(8,DataType)) dQ[8];
 FIFOF#(Vector#(64,DataType)) outQ <- mkFIFOF;
 CacheFIFOF  _LB[8];
 FIFOF#(DataType)                                instream <- mkFIFOF;
@@ -31,11 +35,11 @@ Reg#(Width)                                 r1     <- mkReg(0);
 Reg#(Width)                                 c1     <- mkReg(0);
 Reg#(Width)                                 c2     <- mkReg(0);
 Reg#(Bool)                                  collectWindow <- mkReg(False);
-for(int i=0;i<8; i = i + 1)
+for(int i=0;i<8; i = i + 1) begin
                 _LB[i] <- mkCacheFIFOF;
-
-Sum8 sum <- mkSum8;
-
+		cQ[i] <- mkFIFOF;
+		dQ[i] <- mkFIFOF;
+end
 //#########################################################################
 
 	//#################################### BLOCK LOADED HERE ##########################################	
@@ -64,41 +68,102 @@ Sum8 sum <- mkSum8;
                                 dx[i] = _LB[i].read;
                         dy = unpack(extend(pack(dx)>>(16)));
 
+			//$display(" R1 = %d ", r1);
                         let dd = instream.first; instream.deq;
                         dy[r1] = dd;
 			
-			Vector#(64,DataType) window = newVector;
+			Vector#(8,DataType) window[8];
                        	for(UInt#(8) i=0;i<8; i = i + 1) begin
-                                       Vector#(8,DataType) d <- _LB[i].enQdeQ(dy[i]);
-                                       for(UInt#(8) j=0;j<8; j = j + 1) begin
-                                         	window[i*8+j] = d[j];
-			end
+				       window[i] = newVector;
+                                       window[i] <- _LB[i].enQdeQ(dy[i]);
 			end
 			if(c1 == img-1)
                                         c1 <= 0;
                         else
                                         c1 <= c1 + 1;
                         if(c1 < img-extend(alpha-1)) begin
-				outQ.enq(window); 
+				for(int i = 0;i<8; i = i + 1)
+					cQ[i].enq(window[i]); 
                         end
 			
         endrule
 
+	for(int i=0;i<8;i=i+1)
+	rule _AND_RULE;
+		let d = cQ[i].first; cQ[i].deq;
+		Vector#(8,DataType) vec = replicate(0);
+		vec[0] = d[0];
+		vec[1] = d[1];
+		vec[2] = d[2];
+		//$display(" %d %d %d ", fxptGetInt(d[0]), fxptGetInt(d[1]), fxptGetInt(d[2]));
+		dQ[i].enq(vec);
+	endrule
 
-	rule sumQ;
-		let d = outQ.first; outQ.deq;
-		sum.put(d);
+	rule _SHIFT_RULE0;
+		let d = dQ[0].first; dQ[0].deq;
+		Vector#(64,DataType) vec = replicate(0);
+		for(int i=0;i<3; i = i+ 1)
+			vec[i] = d[i];
+        	sum.put0(vec);
+		sum.activate;
 	endrule
 	
+	rule _SHIFT_RULE1;
+		let d = dQ[1].first; dQ[1].deq;
+		Vector#(64,DataType) vec = replicate(0);
+		for(int i=0;i<3; i=i + 1)
+			vec[i+3] = d[i];
+        	sum.put1(vec);
+	endrule
+
+	
+	rule _SHIFT_RULE2;
+		let d = dQ[2].first; dQ[2].deq;
+		Vector#(64,DataType) vec = replicate(0);
+		for(int i=0;i<3; i=i + 1)
+			vec[i+6] = d[i];
+        	sum.put2(vec);
+	endrule
+	
+	rule _SHIFT_RULE3;
+		let d = dQ[3].first; dQ[3].deq;
+		Vector#(64,DataType) vec = replicate(0);
+        	sum.put3(vec);
+	endrule
+	
+	rule _SHIFT_RULE4;
+		let d = dQ[4].first; dQ[4].deq;
+		Vector#(64,DataType) vec = replicate(0);
+        	sum.put4(vec);
+	endrule
+	
+	rule _SHIFT_RULE5;
+		let d = dQ[5].first; dQ[5].deq;
+		Vector#(64,DataType) vec = replicate(0);
+        	sum.put5(vec);
+	endrule
+	
+	rule _SHIFT_RULE6;
+		let d = dQ[6].first; dQ[6].deq;
+		Vector#(64,DataType) vec = replicate(0);
+        	sum.put6(vec);
+	endrule
+	
+	rule _SHIFT_RULE7;
+		let d = dQ[7].first; dQ[7].deq;
+		Vector#(64,DataType) vec = replicate(0);
+        	sum.put7(vec);
+	endrule
+	
+	
+
 	method Action putFmap(DataType datas);
 				instream.enq(datas);
 	endmethod
 	
-	//method ActionValue#(Vector#(64,DataType)) get;
-	method ActionValue#(DataType) get;
-			//outQ.deq;
-			let d <- sum.get;
-			return d; //outQ.first;
+	method ActionValue#(Vector#(64,DataType)) get;
+			let d <- sum.result;
+			return d;
 	endmethod
 	
 	method Action clean;
@@ -117,4 +182,3 @@ Sum8 sum <- mkSum8;
 	endmethod
 endmodule
 endpackage
-
