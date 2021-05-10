@@ -12,7 +12,6 @@ import sum8::*;
 
 interface Line3;
 	method Action putFmap(DataType datas);
-	//method ActionValue#(Vector#(64,DataType)) get;
 	method ActionValue#(DataType) get;
 	method Action reset(Width imageSize);	
         method Action clean;
