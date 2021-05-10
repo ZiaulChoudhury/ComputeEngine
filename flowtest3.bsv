@@ -22,7 +22,7 @@ module mkFlowTest();
 	endrule
 
 	rule configure(init == False);
-		px.setIndex(30);
+		px.setIndex(21);
 		init <= True;
 	endrule
 

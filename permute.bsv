@@ -14,6 +14,7 @@ endinterface
 (*synthesize*)
 module mkPermute(Permute);
 Reg#(UInt#(6)) 		  probe <- mkReg(0);
+Reg#(UInt#(7)) 		  sft   <- mkReg(0);
 Reg#(DataType) 		  outR  <- mkReg(0);
 Reg#(Vector#(32,DataType)) i0   <- mkRegU;
 Reg#(Vector#(16,DataType)) i1   <- mkRegU;
@@ -49,12 +50,9 @@ FIFOF#(Bit#(1)) p3 <- mkPipelineFIFOF;
 	rule _S2;
 		p2.deq;
 		p3.enq(1);
-		Bit#(6) x = pack(probe);
-		x[4] = 0;
-		x[3] = 0;
-		UInt#(16) sft           = zeroExtend(unpack(x));
-		outR                   <= unpack(truncate(pack(i2) >> (sft << 3)));	 
+		outR                   <= unpack(truncate(pack(i2) >> (sft << 4)));	 
 	endrule
+
 		
 		
         method Action put(Vector#(32,DataType) inR);
@@ -64,6 +62,10 @@ FIFOF#(Bit#(1)) p3 <- mkPipelineFIFOF;
 	 
         method Action setIndex(UInt#(6) inx);	
 		probe <= inx;
+		Bit#(6) x = pack(inx);
+		x[4] = 0;
+		x[3] = 0;
+		sft   <= zeroExtend(unpack(x));
 	endmethod
 	
 	method ActionValue#(DataType) get;

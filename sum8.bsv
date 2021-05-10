@@ -7,6 +7,7 @@ import datatypes::*;
 import SpecialFIFOs:: * ;
 import Real::*;
 import Vector::*;
+import permute::*;
 
 #define L0 64
 #define L1 32
