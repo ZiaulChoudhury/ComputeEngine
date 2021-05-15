@@ -12,9 +12,11 @@ import sum8::*;
 
 interface Line3;
 	method Action putFmap(DataType datas);
-	method ActionValue#(DataType) get;
+	method ActionValue#(Vector#(64,DataType)) get;
+	//method ActionValue#(DataType) get(UInt#(7) index);
 	method Action reset(Width imageSize);	
         method Action clean;
+	method  Action loadShift(UInt#(6) inx);
 endinterface
 
 (*synthesize*)
@@ -66,13 +68,23 @@ Sum8 sum <- mkSum8;
                         let dd = instream.first; instream.deq;
                         dy[r1] = dd;
 			
+			Vector#(64,DataType) d = newVector;
 			Vector#(64,DataType) window = newVector;
                        	for(UInt#(8) i=0;i<8; i = i + 1) begin
-                                       Vector#(8,DataType) d <- _LB[i].enQdeQ(dy[i]);
+                                       Vector#(8,DataType) dmm <- _LB[i].enQdeQ(dy[i]);
                                        for(UInt#(8) j=0;j<8; j = j + 1) begin
-                                         	window[i*8+j] = d[j];
+                                         	d[i*8+j] = dmm[j];	
+					end
 			end
-			end
+						window[0] = d[0];
+						window[1] = d[1];
+						window[2] = d[2];	
+						window[3] = d[8];
+						window[4] = d[9];
+						window[5] = d[10];
+						window[6] = d[16];
+						window[7] = d[17];
+						window[8] = d[18];
 			if(c1 == img-1)
                                         c1 <= 0;
                         else
@@ -86,18 +98,21 @@ Sum8 sum <- mkSum8;
 
 	rule sumQ;
 		let d = outQ.first; outQ.deq;
-		sum.put(d);
+		sum.put(unpack(truncate(pack(d))));
 	endrule
 	
 	method Action putFmap(DataType datas);
 				instream.enq(datas);
 	endmethod
 	
-	//method ActionValue#(Vector#(64,DataType)) get;
-	method ActionValue#(DataType) get;
+	method ActionValue#(Vector#(64,DataType)) get;
+	//method ActionValue#(DataType) get;
+	//method ActionValue#(DataType) get(UInt#(7) index);
 			//outQ.deq;
 			let d <- sum.get;
-			return d; //outQ.first;
+			//return d[index]; //unpack(extend(pack(d)));
+			return unpack(extend(pack(d)));
+			//return outQ.first;
 	endmethod
 	
 	method Action clean;
@@ -114,6 +129,10 @@ Sum8 sum <- mkSum8;
 	method Action reset(Width imageSize);	
                 img        <= imageSize;
 	endmethod
+	method  Action loadShift(UInt#(6) inx);
+		sum.loadShift(inx);
+	endmethod
 endmodule
 endpackage
+
 

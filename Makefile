@@ -30,7 +30,7 @@ hard:
 simulate:
 	#$(BSC)  -verilog -u -cpp +RTS -K20M -RTS -parallel-sim-link 8 -no-warn-action-shadowing Blur3TB.bsv
 	#$(BSC)  -verilog -o ver -e mkBlur3TB *.v  
-	$(BSC)  -sim  -u -g mkFlowTest +RTS -K200M -RTS -show-schedule -steps-max-intervals 1600000 -parallel-sim-link 8 -no-warn-action-shadowing -cpp  flowtest2.bsv
+	$(BSC)  -sim  -u -g mkFlowTest +RTS -K200M -RTS -show-schedule -steps-max-intervals 1600000 -parallel-sim-link 8 -no-warn-action-shadowing -cpp  flowtest.bsv
 	$(BSC)  -sim  -e mkFlowTest  +RTS -K200M -RTS -o sim
 simulatex:
 	$(BSC)  -sim  -u -g mkFlexnnTest +RTS -K200M -RTS -show-schedule -steps-max-intervals 1600000 -no-warn-action-shadowing -cpp  FlexnnTest.bsv

@@ -17,17 +17,28 @@ module mkFlowTest();
 	Reg#(int) col <- mkReg(0);
 	Reg#(int) count <- mkReg(0);
 	Reg#(Bool) init <- mkReg(False);	
-	
+	Reg#(UInt#(6)) idx <- mkReg(0);
+	Reg#(UInt#(6)) idx2 <- mkReg(0);
+		
 	rule cyccount;
 		count <= count + 1;
 	endrule
 
 	rule configure(init == False);
-		px.reset(23);
-		init <= True;
+		px.reset(23);	
+		if(idx < 3)
+			px.loadShift(8);
+		else begin
+			px.loadShift((7-idx2)%8);
+			idx2 <= idx2+1;
+		end
+		if(idx == 27)
+			init <= True;	
+		idx <= idx + 1;
+		//init <= True;
 	endrule
 
-	rule send(count%10==0 && init == True);
+	rule send(count%100==0 && init == True);
 
 		if(cx == 22) begin
 			rx <= rx + 1;
@@ -45,17 +56,9 @@ module mkFlowTest();
 			px.putFmap(0);
 	endrule
 
-	rule receive(count%100==0 && init == True);
+	rule receive (count%100==0 && init == True);
 		let b <- px.get;
-		/*for(int i=0;i<8;i=i+1)begin
-			for(int j=0;j<8;j=j+1) begin
-				$write(fxptGetInt(b[i*8+j]));
-				$write(" ");
-			end
-			$display();
-		end
-		$display();*/
-		$display(" %d ", fxptGetInt(b));
+		$display(" %d ", fxptGetInt(b[0]));
 		col <= col+1;
 		if(col == 20) begin
 			$finish(0);
