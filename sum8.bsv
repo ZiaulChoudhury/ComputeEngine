@@ -17,14 +17,14 @@ import permute::*;
 #define L2 32
 #define L3 16
 #define L4 8
-#define L5 2
-#define L6 1
+#define L5 4
+#define L6 2
 
 
 interface Sum8;
         method  Action put(Vector#(VLEN, DataType) datas);
-	method ActionValue#(Vector#(16,DataType)) get;
-	method  Action loadShift(UInt#(6) inx);
+	method ActionValue#(Vector#(L2,DataType)) get;
+	method  Action loadShift(UInt#(16) inx);
 endinterface
 
 (*synthesize*)
@@ -41,11 +41,11 @@ Reg#(DataType) _T4[L4];
 Reg#(DataType) _L4[L1];
 
 Reg#(UInt#(6)) _SFT[L0];
-for(int i=0;i<128;i=i+1)
+for(int i=0;i<L0;i=i+1)
 _SFT[i] <- mkReg(0);
 
 Reg#(UInt#(16)) _LFT[L0];
-_LFT[0] <- mkReg(24);
+_LFT[0] <- mkReg(448);
 _LFT[1] <- mkReg(0);
 _LFT[2] <- mkReg(0);
 _LFT[3] <- mkReg(0);
@@ -53,7 +53,7 @@ _LFT[4] <- mkReg(0);
 _LFT[5] <- mkReg(0);
 _LFT[6] <- mkReg(0);
 
-FIFOF#(Vector#(16,DataType)) outQ <- mkFIFOF;
+FIFOF#(Vector#(L2,DataType)) outQ <- mkFIFOF;
 
 for(int i=0;i<L0; i = i + 1) begin
 		_T0[i] <- mkReg(0);
@@ -112,10 +112,10 @@ _DR1[1] <- mkRegU;
 _DR1[2] <- mkRegU;
 _DR1[3] <- mkRegU;
 
-Reg#(UInt#(8)) ldx <- mkReg(0);
+Reg#(UInt#(11)) ldx <- mkReg(0);
 
-Permute _PERM[128];
-for(int i=0;i<128;i=i+1)
+Permute _PERM[L0];
+for(int i=0;i<L0;i=i+1)
 	_PERM[i] <- mkPermute;
 
 rule _D0;
@@ -135,13 +135,18 @@ rule _D1;
 endrule
 
 
-for(int i=0;i<127; i = i + 1)
+for(int i =0;i<4; i = i + 1)
+rule getSft2 (ldx < 5);
+	_LFT[i+1] <= _LFT[i];
+endrule
+
+for(int i=0;i<L0-1; i = i + 1)
 rule getSfts;
 	_SFT[i+1] <= _SFT[i];	
 endrule
 
-rule loadShifts (ldx == 27);
-	for(int i=0;i<128; i = i + 1) begin
+rule loadShifts (ldx == 131);
+	for(int i=0;i<L0; i = i + 1) begin
 		_PERM[i].setIndex(_SFT[i]);
 	end
 endrule
@@ -196,7 +201,7 @@ rule act8;
 endrule
 
 
-for(int i=0;i<128;i=i+1) begin
+for(int i=0;i<L0;i=i+1) begin
 rule _PERMUTE;
 	_PERM[i].put(_DR1[i%4]);	
 endrule
@@ -210,8 +215,6 @@ endrule
 end
 
 rule _SAD2;
-		//p7.deq;
-		//p8.enq(1);
 		Vector#(L0,DataType) tempL0 = replicate(0);
 		for(int i=0;i<L0; i = i + 1)
 			tempL0[i] = _L0[i];		
@@ -232,8 +235,6 @@ endrule
 
 
 rule _SAD4;
-		//p8.deq;
-		//p9.enq(1);
 		Vector#(L1,DataType) tempL1 = replicate(0);
 		for(int i=0;i<L1; i = i + 1)
 			tempL1[i] = _L1[i];		
@@ -257,8 +258,6 @@ rule _SAD4;
 endrule
 
 rule _SAD8;
-		//p9.deq;
-		//p10.enq(1);
 		Vector#(L2,DataType) tempL2 = replicate(0);
 		for(int i=0;i<L2; i = i + 1)
 			tempL2[i] = _L2[i];		
@@ -282,8 +281,6 @@ endrule
 
 
 rule _SAD16;
-		//p10.deq;
-		//p11.enq(1);
 		Vector#(L3,DataType) tempL3 = replicate(0);
 		for(int i=0;i<L3; i = i + 1)
 			tempL3[i] = _L3[i];		
@@ -309,8 +306,8 @@ endrule
 
 rule collect;
 	p11.deq;
-		Vector#(16,DataType) x = newVector;
-		for(int i=0;i<16;i = i + 1)
+		Vector#(L2,DataType) x = newVector;
+		for(int i=0;i<L2;i = i + 1)
 			x[i] = _L4[i];
 	outQ.enq(x);
 		
@@ -320,18 +317,17 @@ method Action put(Vector#(VLEN, DataType) datas);
 		p0.enq(1);
 endmethod
 	
-method ActionValue#(Vector#(16,DataType)) get;
+method ActionValue#(Vector#(L2,DataType)) get;
 		outQ.deq;
 		return outQ.first;
-		/*p11.deq;
-		Vector#(16,DataType) x = newVector;
-		for(int i=0;i<16;i = i + 1)
-			x[i] = _L4[i];
-		return x;*/
 endmethod
 	
-method  Action loadShift(UInt#(6) inx);
-	_SFT[0] <= inx;
+method  Action loadShift(UInt#(16) inx);
+	if(ldx < 5) begin
+		_LFT[0] <= (inx);
+	end
+	else
+		_SFT[0] <= truncate(inx);
 	ldx <= ldx + 1;
 endmethod
 

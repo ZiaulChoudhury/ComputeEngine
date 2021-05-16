@@ -17,28 +17,41 @@ module mkFlowTest();
 	Reg#(int) col <- mkReg(0);
 	Reg#(int) count <- mkReg(0);
 	Reg#(Bool) init <- mkReg(False);	
-	Reg#(UInt#(6)) idx <- mkReg(0);
-	Reg#(UInt#(6)) idx2 <- mkReg(0);
+	Reg#(Bool) init2 <- mkReg(False);	
+	Reg#(UInt#(16)) idx <- mkReg(0);
+	Reg#(UInt#(16)) idx2 <- mkReg(0);
+	Reg#(UInt#(16)) idx3 <- mkReg(0);
 		
 	rule cyccount;
 		count <= count + 1;
 	endrule
 
-	rule configure(init == False);
-		px.reset(23);	
-		if(idx < 3)
+
+	rule configure2(init == False && init2 == False);
+		px.reset(23);
+		if(idx3 == 4)
+			px.loadShift(112);
+		else
+			px.loadShift(0);
+		idx3 <= idx3+1;
+		if(idx3 == 5)	
+			init <= True;
+	endrule
+	
+	rule configure(init == True && init2 == False);
+		if(idx < 14)
 			px.loadShift(8);
 		else begin
-			px.loadShift((7-idx2)%8);
+			px.loadShift(truncate((7-idx2)%8));
 			idx2 <= idx2+1;
 		end
-		if(idx == 27)
-			init <= True;	
+		if(idx == 126)
+			init2 <= True;	
 		idx <= idx + 1;
-		//init <= True;
 	endrule
 
-	rule send(count%100==0 && init == True);
+
+	rule send(count%100==0 && init2 == True);
 
 		if(cx == 22) begin
 			rx <= rx + 1;
@@ -56,9 +69,9 @@ module mkFlowTest();
 			px.putFmap(0);
 	endrule
 
-	rule receive (count%100==0 && init == True);
+	rule receive (count%100==0 && init2 == True);
 		let b <- px.get;
-		$display(" %d ", fxptGetInt(b[0]));
+		$display(" %d ", fxptGetInt(b[13]));
 		col <= col+1;
 		if(col == 20) begin
 			$finish(0);
