@@ -12,48 +12,38 @@ import permute::*;
 #define  VLEN 32
 
 
-#define L0 128
-#define L1 64
-#define L2 32
-#define L3 16
-#define L4 8
-#define L5 4
-#define L6 2
+#define L0 32
+#define L1 16
+#define L2 8
+#define L3 4
+#define L4 2
+#define L5 1
 
 
 interface Sum8;
         method  Action put(Vector#(VLEN, DataType) datas);
-	method  ActionValue#(Vector#(L2,DataType)) get;
-	method  Action loadShift(UInt#(10) inx);
+	method ActionValue#(Vector#(L2,DataType)) get;
+	method  Action loadShift(UInt#(16) inx);
 endinterface
 
 (*synthesize*)
 module mkSum8(Sum8);
 Reg#(DataType) _T0[L0];
-Reg#(DataType) __T0[L0];
 Reg#(DataType) _L0[L0];
 Reg#(DataType) _T1[L1];
-Reg#(DataType) __T1[L1];
 Reg#(DataType) _L1[L1];
-Reg#(DataType) __L1[L1];
 Reg#(DataType) _T2[L2]; 
-Reg#(DataType) __T2[L2]; 
 Reg#(DataType) _L2[L1]; 
-Reg#(DataType) __L2[L1]; 
 Reg#(DataType) _T3[L3];
-Reg#(DataType) __T3[L3];
 Reg#(DataType) _L3[L1];
-Reg#(DataType) __L3[L1];
 Reg#(DataType) _T4[L4];
-Reg#(DataType) __T4[L4];
 Reg#(DataType) _L4[L1];
-Reg#(DataType) __L4[L1];
 
 Reg#(UInt#(6)) _SFT[L0];
 for(int i=0;i<L0;i=i+1)
 _SFT[i] <- mkReg(0);
 
-Reg#(UInt#(10)) _LFT[L0];
+Reg#(UInt#(16)) _LFT[L0];
 _LFT[0] <- mkReg(448);
 _LFT[1] <- mkReg(0);
 _LFT[2] <- mkReg(0);
@@ -66,32 +56,20 @@ FIFOF#(Vector#(L2,DataType)) outQ <- mkFIFOF;
 
 for(int i=0;i<L0; i = i + 1) begin
 		_T0[i] <- mkReg(0);
-		__T0[i] <- mkReg(0);
 		_L0[i] <- mkReg(0);
 	if(i < L1) begin
 		_T1[i] <- mkReg(0);
-		__T1[i] <- mkReg(0);
 		_L1[i] <- mkReg(0);
-		__L1[i] <- mkReg(0);
 		_L2[i] <- mkReg(0);
-		__L2[i] <- mkReg(0);
 		_L3[i] <- mkReg(0);
-		__L3[i] <- mkReg(0);
 		_L4[i] <- mkReg(0);
-		__L4[i] <- mkReg(0);
 	end
-	if(i < L2) begin
+	if(i < L2)
 		_T2[i] <- mkReg(0);
-		__T2[i] <- mkReg(0);
-	end
-	if(i < L3) begin
+	if(i < L3)
 		_T3[i] <- mkReg(0);
-		__T3[i] <- mkReg(0);
-	end
-	if(i<L4) begin
+	if(i<L4)
 		_T4[i] <- mkReg(0);
-		__T4[i] <- mkReg(0);
-	end
 end
 
 FIFOF#(Bit#(1)) p0 <- mkPipelineFIFOF;
@@ -102,15 +80,10 @@ FIFOF#(Bit#(1)) p4 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p5 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p6 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p7 <- mkPipelineFIFOF;
-FIFOF#(Bit#(1)) p70 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p8 <- mkPipelineFIFOF;
-FIFOF#(Bit#(1)) p80 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p9 <- mkPipelineFIFOF;
-FIFOF#(Bit#(1)) p90 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p10 <- mkPipelineFIFOF;
-FIFOF#(Bit#(1)) p100 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p11 <- mkPipelineFIFOF;
-FIFOF#(Bit#(1)) p110 <- mkPipelineFIFOF;
 
 
 Reg#(Vector#(VLEN, DataType)) inReg <- mkRegU;
@@ -139,12 +112,6 @@ _DR1[2] <- mkRegU;
 _DR1[3] <- mkRegU;
 
 Reg#(UInt#(11)) ldx <- mkReg(0);
-
-Reg#(Vector#(L0,DataType)) tempL0 <- mkRegU;
-Reg#(Vector#(L1,DataType)) tempL1 <- mkRegU;
-Reg#(Vector#(L2,DataType)) tempL2 <- mkRegU;
-Reg#(Vector#(L3,DataType)) tempL3 <- mkRegU;
-
 
 Permute _PERM[L0];
 for(int i=0;i<L0;i=i+1)
@@ -177,7 +144,7 @@ rule getSfts;
 	_SFT[i+1] <= _SFT[i];	
 endrule
 
-rule loadShifts (ldx == 131);
+rule loadShifts (ldx == 32);
 	for(int i=0;i<L0; i = i + 1) begin
 		_PERM[i].setIndex(_SFT[i]);
 	end
@@ -207,55 +174,31 @@ endrule
 
 rule act4;
 	p6.deq;	
-	p70.enq(1);
-endrule
-
-rule act4x;
-	p70.deq;
 	p7.enq(1);
 endrule
 
-
 rule act5;
 	p7.deq;	
-	p80.enq(1);
-endrule
-
-
-rule act5x;
-	p80.deq;	
 	p8.enq(1);
 endrule
 
+
 rule act6;
 	p8.deq;	
-	p90.enq(1);
-endrule
-
-rule act6x;
-	p90.deq;	
 	p9.enq(1);
 endrule
 
+
 rule act7;
 	p9.deq;	
-	p100.enq(1);
-endrule
-
-rule act7x;
-	p100.deq;	
 	p10.enq(1);
 endrule
 
 rule act8;
 	p10.deq;	
-	p110.enq(1);
-endrule
-
-rule act8x;
-	p110.deq;	
 	p11.enq(1);
 endrule
+
 
 for(int i=0;i<L0;i=i+1) begin
 rule _PERMUTE;
@@ -264,53 +207,43 @@ endrule
 
 rule _MAC;
 		let d <- _PERM[i].get;
-		__T0[i] <= d;
+		_T0[i] <= d;
 		_L0[i] <= d;
 endrule
 
 end
 
-rule _SAD20;
-		Vector#(L0,DataType) temp = replicate(0);
-		for(int i=0;i<L0; i = i + 1) begin
-			temp[i] = _L0[i];
-			_T0[i] <= __T0[i];	
-		end	
-		tempL0 <= unpack(pack(temp)>> (_LFT[0] << 4));		
-endrule
-
-rule _SAD21;
-
+rule _SAD2;
+		Vector#(L0,DataType) tempL0 = replicate(0);
+		for(int i=0;i<L0; i = i + 1)
+			tempL0[i] = _L0[i];		
+		Vector#(L0,DataType) temp = unpack(pack(tempL0)>> (_LFT[0] << 4));	
 		for(int i=0;i<L1;i=i+1)
-				__T1[i] <=  fxptTruncate(fxptAdd(_T0[2*i], _T0[2*i+1]));
+				_T1[i] <=  fxptTruncate(fxptAdd(_T0[2*i], _T0[2*i+1]));
 		
 		if (combine[0] == 1) begin	
 			for(int i=0;i<L1;i=i+1) begin
 				DataType a =  fxptTruncate(fxptAdd(_T0[2*i], _T0[2*i+1]));
-				_L1[i] <= fxptTruncate(fxptAdd(a,tempL0[i]));
+				_L1[i] <= fxptTruncate(fxptAdd(a,temp[i]));
 			end
 		end
 		else
 			for(int i=0;i<L1;i=i+1)
-				_L1[i] <= tempL0[i];
+				_L1[i] <= temp[i];
 endrule
 
-rule _SAD40;
-		Vector#(L1,DataType) temp = replicate(0);
-		for(int i=0;i<L1; i = i + 1) begin
-			temp[i] = _L1[i];
-			_T1[i] <= __T1[i];			
-		end	
-		tempL1 <= unpack(pack(temp)>> (_LFT[1] << 4));	
-endrule
 
-rule _SAD41;
+rule _SAD4;
+		Vector#(L1,DataType) tempL1 = replicate(0);
+		for(int i=0;i<L1; i = i + 1)
+			tempL1[i] = _L1[i];		
+		Vector#(L1,DataType) temp = unpack(pack(tempL1)>> (_LFT[1] << 4));	
 		for(int i=0;i<L2;i=i+1)
-				__T2[i] <=  fxptTruncate(fxptAdd(_T1[2*i], _T1[2*i+1]));
+				_T2[i] <=  fxptTruncate(fxptAdd(_T1[2*i], _T1[2*i+1]));
 		if(combine[1] == 1) begin	
 			for(int i=0;i<L2;i=i+1) begin
 				DataType a =  fxptTruncate(fxptAdd(_T1[2*i], _T1[2*i+1]));
-				_L2[i]  <=  fxptTruncate(fxptAdd(a,tempL1[i]));
+				_L2[i]  <=  fxptTruncate(fxptAdd(a,temp[i]));
 			end
 		end
 		else
@@ -319,66 +252,54 @@ rule _SAD41;
 					_L2[i] <= _L1[i];
 			else
 				for(int i=0;i<L1;i=i+1)
-					_L2[i] <= tempL1[i];
+					_L2[i] <= temp[i];
 				
 endrule
 
-rule _SAD80;
-		Vector#(L2,DataType) temp = replicate(0);
-		for(int i=0;i<L2; i = i + 1) begin
-			temp[i] = _L2[i];
-			__L2[i] <= _L2[i];	
-			_T2[i] <= __T2[i];
-		end	
-		tempL2 <= unpack(pack(temp)>> (_LFT[2] << 4));	
-endrule
-
-rule _SAD81;
+rule _SAD8;
+		Vector#(L2,DataType) tempL2 = replicate(0);
+		for(int i=0;i<L2; i = i + 1)
+			tempL2[i] = _L2[i];		
+		Vector#(L2,DataType) temp = unpack(pack(tempL2)>> (_LFT[2] << 4));	
 		for(int i=0;i<L3;i=i+1)
-				__T3[i] <=  fxptTruncate(fxptAdd(_T2[2*i], _T2[2*i+1]));
+				_T3[i] <=  fxptTruncate(fxptAdd(_T2[2*i], _T2[2*i+1]));
 		if(combine[2] == 1) begin	
 			for(int i=0;i<L3;i=i+1) begin
 				DataType a =  fxptTruncate(fxptAdd(_T2[2*i], _T2[2*i+1]));
-				_L3[i]    <=  fxptTruncate(fxptAdd(a,tempL2[i]));
+				_L3[i]    <=  fxptTruncate(fxptAdd(a,temp[i]));
 			end
 		end
 		else
 			if(outLevel[2] == 1)
 				for(int i=0;i<L1;i=i+1)
-					_L3[i] <= __L2[i];
+					_L3[i] <= _L2[i];
 			else
 				for(int i=0;i<L2;i=i+1)
-					_L3[i] <= tempL2[i];
+					_L3[i] <= temp[i];
 endrule
 
-rule _SAD160;
-		Vector#(L3,DataType) temp = replicate(0);
-		for(int i=0;i<L3; i = i + 1) begin
-			temp[i] = _L3[i];
-			_T3[i] <= __T3[i];
-			__L3[i] <= _L3[i];	
-		end	
 
-		tempL3 <= unpack(pack(temp)>> (_LFT[3] << 4));	
-endrule
+rule _SAD16;
+		Vector#(L3,DataType) tempL3 = replicate(0);
+		for(int i=0;i<L3; i = i + 1)
+			tempL3[i] = _L3[i];		
 
-rule _SAD161;
-
+		Vector#(L3,DataType) temp = unpack(pack(tempL3)>> (_LFT[3] << 4));	
 		for(int i=0;i<L4;i=i+1)
-				__T4[i] <=  fxptTruncate(fxptAdd(_T3[2*i], _T3[2*i+1]));
+				_T4[i] <=  fxptTruncate(fxptAdd(_T3[2*i], _T3[2*i+1]));
 		if(combine[3] == 1) begin	
 			for(int i=0;i<L4;i=i+1) begin
 				DataType a =  fxptTruncate(fxptAdd(_T3[2*i], _T3[2*i+1]));
-				_L4[i]    <=  fxptTruncate(fxptAdd(a,tempL3[i]));
+				_L4[i]    <=  fxptTruncate(fxptAdd(a,temp[i]));
 			end
 		end
 		else
 			if(outLevel[3] == 1)
 				for(int i=0;i<L1;i=i+1)
-					_L4[i] <= __L3[i];
+					_L4[i] <= _L3[i];
 			else
 				for(int i=0;i<L3;i=i+1)
-					_L4[i] <= tempL3[i];
+					_L4[i] <= temp[i];
 endrule
 
 
@@ -400,7 +321,7 @@ method ActionValue#(Vector#(L2,DataType)) get;
 		return outQ.first;
 endmethod
 	
-method  Action loadShift(UInt#(10) inx);
+method  Action loadShift(UInt#(16) inx);
 	if(ldx < 5) begin
 		_LFT[0] <= (inx);
 	end

@@ -12,11 +12,11 @@ import sum8::*;
 
 interface Line3;
 	method Action putFmap(DataType datas);
-	//method ActionValue#(Vector#(256,DataType)) get;
-	method ActionValue#(DataType) get(UInt#(8) index);
+	method ActionValue#(Vector#(256,DataType)) get;
+	//method ActionValue#(DataType) get(UInt#(8) index);
 	method Action reset(Width imageSize);	
         method Action clean;
-	method  Action loadShift(UInt#(10) inx);
+	method  Action loadShift(UInt#(16) inx);
 endinterface
 
 (*synthesize*)
@@ -105,11 +105,11 @@ Sum8 sum <- mkSum8;
 				instream.enq(datas);
 	endmethod
 	
-	//method ActionValue#(Vector#(256,DataType)) get;
-	method ActionValue#(DataType) get(UInt#(8) index);
+	method ActionValue#(Vector#(256,DataType)) get;
+	//method ActionValue#(DataType) get(UInt#(8) index);
 			let d <- sum.get;
-			return d[index]; 
-			//return unpack(extend(pack(d)));
+			//return d[index]; 
+			return unpack(extend(pack(d)));
 			//return outQ.first;
 	endmethod
 	
@@ -127,7 +127,7 @@ Sum8 sum <- mkSum8;
 	method Action reset(Width imageSize);	
                 img        <= imageSize;
 	endmethod
-	method  Action loadShift(UInt#(10) inx);
+	method  Action loadShift(UInt#(16) inx);
 		sum.loadShift(inx);
 	endmethod
 endmodule

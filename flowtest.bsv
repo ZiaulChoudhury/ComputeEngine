@@ -9,6 +9,8 @@ import line3::*;
 
 #define IMG 256
 
+// Image size = IMG - (7- Kerenel Size + 1)
+
 (*synthesize*)
 module mkFlowTest();
 	Line3 px <- mkLine3;
@@ -28,9 +30,9 @@ module mkFlowTest();
 
 
 	rule configure2(init == False && init2 == False);
-		px.reset(23);
+		px.reset(21);
 		if(idx3 == 4)
-			px.loadShift(112);
+			px.loadShift(24);
 		else
 			px.loadShift(0);
 		idx3 <= idx3+1;
@@ -39,13 +41,13 @@ module mkFlowTest();
 	endrule
 	
 	rule configure(init == True && init2 == False);
-		if(idx < 14)
+		if(idx < 3)
 			px.loadShift(8);
 		else begin
 			px.loadShift(truncate((7-idx2)%8));
 			idx2 <= idx2+1;
 		end
-		if(idx == 126)
+		if(idx == 27)
 			init2 <= True;	
 		idx <= idx + 1;
 	endrule
@@ -53,14 +55,14 @@ module mkFlowTest();
 
 	rule send(count%100==0 && init2 == True);
 
-		if(cx == 22) begin
+		if(cx == 20) begin
 			rx <= rx + 1;
 			cx <= 0;
 		end
 		else
 			cx <= cx + 1;
 		
-		if(cx < 18) begin
+		if(cx < 16 && rx < 16) begin
 		Int#(10) dx = (rx * cx + 10)%255;
 		DataType d = fromInt(dx);
 			px.putFmap(d);
@@ -71,9 +73,9 @@ module mkFlowTest();
 
 	rule receive (count%100==0 && init2 == True);
 		let b <- px.get;
-		$display(" %d ", fxptGetInt(b[13]));
+		$display(" %d ", fxptGetInt(b[2]));
 		col <= col+1;
-		if(col == 20) begin
+		if(col == 195) begin
 			$finish(0);
 		end
 	endrule
