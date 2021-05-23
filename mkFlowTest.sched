@@ -1,0 +1,49 @@
+=== Generated schedule for mkFlowTest ===
+
+Rule schedule
+-------------
+Rule: cyccount
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: configure2
+Predicate: (! init) && (! init2)
+Blocking rules: (none)
+ 
+Rule: configure
+Predicate: init && (! init2)
+Blocking rules: (none)
+ 
+Rule: send
+Predicate: px.RDY_put &&
+	   ((count[31]
+	     ? - ((count[31]
+		   ? - count
+		   : count) %
+		  32'd100)
+	     : ((count[31]
+		 ? - count
+		 : count) %
+		32'd100)) ==
+	    32'd0) &&
+	   init2
+Blocking rules: (none)
+ 
+Rule: receive
+Predicate: px.RDY_get &&
+	   ((count[31]
+	     ? - ((count[31]
+		   ? - count
+		   : count) %
+		  32'd100)
+	     : ((count[31]
+		 ? - count
+		 : count) %
+		32'd100)) ==
+	    32'd0) &&
+	   init2
+Blocking rules: (none)
+ 
+Logical execution order: configure2, configure, send, receive, cyccount
+
+==========================================

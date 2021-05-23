@@ -32,7 +32,9 @@ endinterface
 module mkSum8(Sum8);
 Reg#(DataType) _T0[L0];
 Reg#(DataType) _L0[L0];
+Reg#(DataType) __L0[L0];
 Reg#(DataType) _T1[L1];
+Reg#(DataType) __T1[L1];
 Reg#(DataType) _L1[L1];
 Reg#(DataType) _T2[L2]; 
 Reg#(DataType) _L2[L1]; 
@@ -66,8 +68,10 @@ FIFOF#(Vector#(L2,DataType)) outQ <- mkFIFOF;
 for(int i=0;i<L0; i = i + 1) begin
 		_T0[i] <- mkReg(0);
 		_L0[i] <- mkReg(0);
+		__L0[i] <- mkReg(0);
 	if(i < L1) begin
 		_T1[i] <- mkReg(0);
+		__T1[i] <- mkReg(0);
 		_L1[i] <- mkReg(0);
 		_L2[i] <- mkReg(0);
 		_L3[i] <- mkReg(0);
@@ -94,6 +98,7 @@ FIFOF#(Bit#(1)) p8 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p9 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p10 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p11 <- mkPipelineFIFOF;
+FIFOF#(Bit#(1)) p12 <- mkPipelineFIFOF;
 
 
 Reg#(Vector#(96, DataType)) inReg <- mkRegU;
@@ -278,6 +283,10 @@ rule act8;
 	p11.enq(1);
 endrule
 
+rule act9;
+	p11.deq;	
+	p12.enq(1);
+endrule
 
 for(int i=0;i<L0;i=i+1) begin
 rule _PERMUTE;
@@ -292,18 +301,24 @@ endrule
 
 end
 
-rule _SAD2;
+rule _SAD2_0;
+			for(int i=0; i<L0; i = i + 1)
+				__L0[i] <= _L0[i];
+			
+			for(int i=0;i<L1;i=i+1)
+				__T1[i] <=  fxptTruncate(fxptAdd(_T0[2*i], _T0[2*i+1]));
+endrule
+rule _SAD2_1;
 		Vector#(L0,DataType) tempL0 = replicate(0);
 		for(int i=0;i<L0; i = i + 1)
-			tempL0[i] = _L0[i];		
+			tempL0[i] = __L0[i];		
 		Vector#(L0,DataType) temp = unpack(pack(tempL0)>> (_LFT[0] << 4));	
 		for(int i=0;i<L1;i=i+1)
-				_T1[i] <=  fxptTruncate(fxptAdd(_T0[2*i], _T0[2*i+1]));
+				_T1[i] <=  __T1[i];
 		
 		if (combine[0] == 1) begin	
 			for(int i=0;i<L1;i=i+1) begin
-				DataType a =  fxptTruncate(fxptAdd(_T0[2*i], _T0[2*i+1]));
-				_L1[i] <= fxptTruncate(fxptAdd(a,temp[i]));
+				_L1[i] <= fxptTruncate(fxptAdd(__T1[i],temp[i]));
 			end
 		end
 		else
@@ -383,7 +398,7 @@ endrule
 
 
 rule collect;
-	p11.deq;
+	p12.deq;
 		Vector#(L2,DataType) x = newVector;
 		for(int i=0;i<L2;i = i + 1)
 			x[i] = _L4[i];
