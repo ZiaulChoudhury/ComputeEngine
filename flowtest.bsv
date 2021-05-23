@@ -5,7 +5,7 @@ import Vector:: *;
 import FIFO:: *;
 import FIFOF:: *;
 import datatypes::*;
-import line3::*;
+import sum8::*;
 
 #define IMG 256
 
@@ -13,7 +13,7 @@ import line3::*;
 
 (*synthesize*)
 module mkFlowTest();
-	Line3 px <- mkLine3;
+	Sum8 px <- mkSum8;
 	Reg#(Int#(10)) rx <- mkReg(0);
 	Reg#(Int#(10)) cx <- mkReg(0);
 	Reg#(int) col <- mkReg(0);
@@ -30,21 +30,28 @@ module mkFlowTest();
 
 
 	rule configure2(init == False && init2 == False);
-		px.reset(21);
+		//px.reset(21);
 		if(idx3 == 4)
-			px.loadShift(24);
+			px.loadConfig(24);
 		else
-			px.loadShift(0);
+			px.loadConfig(0);
 		idx3 <= idx3+1;
 		if(idx3 == 5)	
 			init <= True;
 	endrule
 	
 	rule configure(init == True && init2 == False);
-		if(idx < 3)
-			px.loadShift(8);
+		if(idx < 3) begin
+			UInt#(8) sx = 8;
+			UInt#(2) tx = 0;
+			sx = unpack((pack(sx) << 2) | zeroExtend(pack(tx))); 
+			px.loadConfig(zeroExtend(sx));
+		end
 		else begin
-			px.loadShift(truncate((7-idx2)%8));
+			UInt#(8) sx = truncate((7-idx2)%8);
+			UInt#(2) tx = 0;
+			sx = unpack((pack(sx) << 2) | zeroExtend(pack(tx)));
+			px.loadConfig(zeroExtend(sx));
 			idx2 <= idx2+1;
 		end
 		if(idx == 27)
@@ -65,10 +72,12 @@ module mkFlowTest();
 		if(cx < 16 && rx < 16) begin
 		Int#(10) dx = (rx * cx + 10)%255;
 		DataType d = fromInt(dx);
-			px.putFmap(d);
+			px.put(unpack(zeroExtend(pack(d))));
 		end
-		else
-			px.putFmap(0);
+		else begin
+			Vector#(32,DataType) x = replicate(0);
+			px.put(x);
+		end
 	endrule
 
 	rule receive (count%100==0 && init2 == True);

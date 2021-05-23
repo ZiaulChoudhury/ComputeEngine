@@ -8,14 +8,13 @@ import SpecialFIFOs:: * ;
 import Real::*;
 import Vector::*;
 import cacheFIFO::*;
-import sum8::*;
+//import sum8::*;
 
 interface Line3;
-	method Action putFmap(DataType datas);
-	method ActionValue#(Vector#(256,DataType)) get;
-	//method ActionValue#(DataType) get(UInt#(8) index);
-	method Action reset(Width imageSize);	
-        method Action clean;
+	method Action  putFmap(DataType datas);
+	method ActionValue#(Vector#(32,DataType)) get;
+	method Action  reset(Width imageSize);	
+        method Action  clean;
 	method  Action loadShift(UInt#(16) inx);
 endinterface
 
@@ -24,7 +23,7 @@ module mkLine3(Line3);
 
 //############### CONFIG PARAMETERS ######################################
 Reg#(Width)     alpha      <-  mkReg(8);
-Reg#(Width)     img        <-  mkReg(0);
+Reg#(Width)     img        <-  mkReg(21);
 FIFOF#(Vector#(64,DataType)) outQ <- mkFIFOF;
 CacheFIFOF  _LB[8];
 FIFOF#(DataType)                                instream <- mkFIFOF;
@@ -35,7 +34,7 @@ Reg#(Bool)                                  collectWindow <- mkReg(False);
 for(int i=0;i<8; i = i + 1)
                 _LB[i] <- mkCacheFIFOF;
 
-Sum8 sum <- mkSum8;
+//Sum8 sum <- mkSum8;
 
 //#########################################################################
 
@@ -96,21 +95,22 @@ Sum8 sum <- mkSum8;
         endrule
 
 
-	rule sumQ;
+	/*rule sumQ;
 		let d = outQ.first; outQ.deq;
 		sum.put(unpack(truncate(pack(d))));
-	endrule
+	endrule*/
 	
 	method Action putFmap(DataType datas);
 				instream.enq(datas);
 	endmethod
 	
-	method ActionValue#(Vector#(256,DataType)) get;
+	method ActionValue#(Vector#(32,DataType)) get;
 	//method ActionValue#(DataType) get(UInt#(8) index);
-			let d <- sum.get;
+			//let d <- sum.get;
 			//return d[index]; 
-			return unpack(extend(pack(d)));
-			//return outQ.first;
+			//return unpack(extend(pack(d)));
+			outQ.deq;
+			return unpack(truncate(pack(outQ.first)));
 	endmethod
 	
 	method Action clean;
@@ -127,9 +127,9 @@ Sum8 sum <- mkSum8;
 	method Action reset(Width imageSize);	
                 img        <= imageSize;
 	endmethod
-	method  Action loadShift(UInt#(16) inx);
+	/*method  Action loadShift(UInt#(16) inx);
 		sum.loadShift(inx);
-	endmethod
+	endmethod*/
 endmodule
 endpackage
 

@@ -8,6 +8,8 @@ import SpecialFIFOs:: * ;
 import Real::*;
 import Vector::*;
 import permute::*;
+import BRAMFIFO::*;
+import line3::*;
 
 #define  VLEN 32
 
@@ -22,8 +24,8 @@ import permute::*;
 
 interface Sum8;
         method  Action put(Vector#(VLEN, DataType) datas);
-	method ActionValue#(Vector#(L2,DataType)) get;
-	method  Action loadShift(UInt#(16) inx);
+	method  ActionValue#(Vector#(L2,DataType)) get;
+	method  Action loadConfig(UInt#(16) inx);
 endinterface
 
 (*synthesize*)
@@ -39,7 +41,14 @@ Reg#(DataType) _L3[L1];
 Reg#(DataType) _T4[L4];
 Reg#(DataType) _L4[L1];
 
-Reg#(UInt#(6)) _SFT[L0];
+FIFOF#(DataType) fQ[VLEN];
+Reg#(DataType)   t[VLEN];
+for(int i=0;i<VLEN; i = i + 1) begin
+        fQ[i] <- mkSizedBRAMFIFOF(1024);
+	t [i] <- mkReg(0);
+end
+
+Reg#(UInt#(8)) _SFT[L0];
 for(int i=0;i<L0;i=i+1)
 _SFT[i] <- mkReg(0);
 
@@ -73,6 +82,7 @@ for(int i=0;i<L0; i = i + 1) begin
 end
 
 FIFOF#(Bit#(1)) p0 <- mkPipelineFIFOF;
+FIFOF#(Bit#(1)) p00 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p1 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p2 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p3 <- mkPipelineFIFOF;
@@ -86,9 +96,9 @@ FIFOF#(Bit#(1)) p10 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p11 <- mkPipelineFIFOF;
 
 
-Reg#(Vector#(VLEN, DataType)) inReg <- mkRegU;
-Reg#(Vector#(VLEN, DataType)) _DR0[2];
-Reg#(Vector#(VLEN, DataType)) _DR1[4];
+Reg#(Vector#(96, DataType)) inReg <- mkRegU;
+Reg#(Vector#(96, DataType)) _DR0[2];
+Reg#(Vector#(96, DataType)) _DR1[4];
 
 Reg#(Bit#(1)) combine[6];
 Reg#(Bit#(1)) outLevel[6];
@@ -103,6 +113,8 @@ outLevel[1] <- mkReg(0);
 outLevel[2] <- mkReg(0);
 outLevel[3] <- mkReg(1);
 
+Reg#(UInt#(6)) s0 <- mkReg(0);
+Reg#(UInt#(6)) s1 <- mkReg(63);
 
 _DR0[0] <- mkRegU;
 _DR0[1] <- mkRegU;
@@ -117,14 +129,81 @@ Permute _PERM[L0];
 for(int i=0;i<L0;i=i+1)
 	_PERM[i] <- mkPermute;
 
-rule _D0;
+Line3 lb0 <- mkLine3;
+Line3 lb1 <- mkLine3;
+
+Reg#(Vector#(VLEN,DataType)) lbx0 <- mkRegU;
+Reg#(Vector#(VLEN,DataType)) lbx1 <- mkRegU;
+
+Wire#(Bool) rx <- mkWire;
+
+
+
+for(UInt#(6) i = 0; i<VLEN; i = i + 1) begin
+
+rule _LB1 (i == s0 && s0 != s1);
+	let x = fQ[i].first; fQ[i].deq;
+	lb0.putFmap(x);	
+endrule
+
+rule _LB2 (i == s1 && s0 != s1);
+	let y = fQ[i].first; fQ[i].deq;	
+	lb1.putFmap(y);
+endrule
+
+rule _LB3 (i != s0 && i != s1 && rx == True && s0 != s1);
+	let x = fQ[i].first; fQ[i].deq;
+        t[i] <= x;	
+endrule
+
+end
+ 
+rule _LB4 (s0 != s1);
+	p00.enq(1);
+	rx <= True;
+	let d0 <- lb0.get;		
+        lbx0 <= d0;
+endrule
+
+rule _LB5;
+	let d1 <- lb1.get;	
+	lbx1 <= d1;	
+endrule
+
+rule _LB6 (s0 != s1 );
+	p00.deq;
+	Vector#(96,DataType) x = newVector;
+	for(int i=0; i < VLEN; i = i + 1)
+		x[i] = lbx0[i];
+		
+	for(int i=0; i < VLEN; i = i + 1)
+		x[i+VLEN] = lbx1[i];
+	
+	
+	for(int i=0; i < VLEN; i = i + 1)
+		x[i+2*VLEN] = lbx1[i];
+	
+	inReg <= unpack(truncate(pack(x)));
+	p0.enq(1);
+endrule
+
+rule _LB7 (s0 == s1);
+		Vector#(VLEN, DataType) x = newVector;
+		for(int i=0; i<VLEN; i = i + 1) begin
+			x[i] = fQ[i].first; fQ[i].deq;
+		end
+		inReg <= unpack(zeroExtend(pack(x)));
+		p0.enq(1);
+endrule
+
+rule _D1;
 		 p0.deq;
 		 p1.enq(1);
 		_DR0[0] <= inReg;
 		_DR0[1] <= inReg;	
 endrule
 
-rule _D1;
+rule _D2;
 		 p1.deq;
 		 p2.enq(1);
 		_DR1[0] <= _DR0[0];
@@ -312,8 +391,8 @@ rule collect;
 		
 endrule
 method Action put(Vector#(VLEN, DataType) datas);
-		inReg <= unpack(truncate(pack(datas)));
-		p0.enq(1);
+		for(int i=0;i<VLEN; i = i + 1)
+			fQ[i].enq(datas[i]);
 endmethod
 	
 method ActionValue#(Vector#(L2,DataType)) get;
@@ -321,7 +400,7 @@ method ActionValue#(Vector#(L2,DataType)) get;
 		return outQ.first;
 endmethod
 	
-method  Action loadShift(UInt#(16) inx);
+method  Action loadConfig(UInt#(16) inx);
 	if(ldx < 5) begin
 		_LFT[0] <= (inx);
 	end

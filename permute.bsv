@@ -6,8 +6,8 @@ import SpecialFIFOs:: * ;
 import FixedPoint::*;
 
 interface Permute;
-        method Action put(Vector#(32,DataType) inR);
-        method Action setIndex(UInt#(6) inx);	
+        method Action put(Vector#(96,DataType) inR);
+        method Action setIndex(UInt#(8) inx2);	
 	method ActionValue#(DataType) get;
 endinterface
 
@@ -20,6 +20,7 @@ Reg#(Vector#(32,DataType)) i0   <- mkRegU;
 Reg#(Vector#(16,DataType)) i1   <- mkRegU;
 Reg#(Vector#(8,DataType))  i2   <- mkRegU;
 
+Reg#(UInt#(2)) stripIndex	<- mkReg(0);
 FIFOF#(Bit#(1)) p0 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p1 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p2 <- mkPipelineFIFOF;
@@ -55,12 +56,21 @@ FIFOF#(Bit#(1)) p3 <- mkPipelineFIFOF;
 
 		
 		
-        method Action put(Vector#(32,DataType) inR);
-		i0 <= inR;
+        method Action put(Vector#(96,DataType) inR);
+		Vector#(3,Vector#(32,DataType)) x = unpack(pack(inR));
+		if(stripIndex == 0)
+			i0 <= x[0];
+		else if(stripIndex == 1)
+			i0 <= x[1];
+		else if(stripIndex == 2)
+			i0 <= x[2];
+			
 		p0.enq(1); 
        	endmethod		
 	 
-        method Action setIndex(UInt#(6) inx);	
+        method Action setIndex(UInt#(8) inx2);
+		stripIndex <= truncate(inx2); 	
+		UInt#(6) inx = unpack(truncate(pack(inx2) >> 2));
 		probe <= inx;
 		Bit#(6) x = pack(inx);
 		x[4] = 0;
