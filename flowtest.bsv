@@ -60,7 +60,7 @@ module mkFlowTest();
 	endrule
 
 
-	rule send(count%100==0 && init2 == True);
+	rule send(count%1000==0 && init2 == True);
 
 		if(cx == 20) begin
 			rx <= rx + 1;

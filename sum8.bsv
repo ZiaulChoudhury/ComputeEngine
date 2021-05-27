@@ -46,7 +46,7 @@ Reg#(DataType) _L4[L1];
 FIFOF#(DataType) fQ[VLEN];
 Reg#(DataType)   t[VLEN];
 for(int i=0;i<VLEN; i = i + 1) begin
-        fQ[i] <- mkSizedBRAMFIFOF(1024);
+        fQ[i] <- mkSizedBRAMFIFOF(8);
 	t [i] <- mkReg(0);
 end
 
@@ -141,13 +141,15 @@ Reg#(Vector#(VLEN,DataType)) lbx0 <- mkRegU;
 Reg#(Vector#(VLEN,DataType)) lbx1 <- mkRegU;
 
 Wire#(Bool) rx <- mkWire;
-
+Wire#(Bool) dIn <- mkWire;
+Wire#(Vector#(VLEN, DataType)) dataIn <- mkWire;
 
 
 for(UInt#(6) i = 0; i<VLEN; i = i + 1) begin
 
 rule _LB1 (i == s0 && s0 != s1);
 	let x = fQ[i].first; fQ[i].deq;
+	//$display(" Enque to line buffer %d ", i);
 	lb0.putFmap(x);	
 endrule
 
@@ -166,7 +168,7 @@ end
 rule _LB4 (s0 != s1);
 	p00.enq(1);
 	rx <= True;
-	let d0 <- lb0.get;		
+	let d0 <- lb0.get;	
         lbx0 <= d0;
 endrule
 
@@ -405,9 +407,17 @@ rule collect;
 	outQ.enq(x);
 		
 endrule
+
+for(int i=0;i<VLEN; i = i + 1)
+rule disperse(dIn == True);
+		fQ[i].enq(dataIn[i]);
+endrule
+
 method Action put(Vector#(VLEN, DataType) datas);
-		for(int i=0;i<VLEN; i = i + 1)
-			fQ[i].enq(datas[i]);
+		dIn <= True;
+		dataIn <= datas;
+		//for(int i=0;i<VLEN; i = i + 1)
+		//	fQ[i].enq(datas[i]);
 endmethod
 	
 method ActionValue#(Vector#(L2,DataType)) get;
