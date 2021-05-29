@@ -149,6 +149,7 @@ for(UInt#(6) i = 0; i<VLEN; i = i + 1) begin
 
 rule _LB1 (i == s0 && s0 != s1);
 	let x = fQ[i].first; fQ[i].deq;
+	//$display(" Enque to line buffer %d ", i);
 	lb0.putFmap(x);	
 endrule
 
@@ -167,14 +168,16 @@ end
 rule _LB4 (s0 != s1);
 	p00.enq(1);
 	rx <= True;
-	let d0 <- lb0.get;	
+	let d0 <- lb0.get;
+	for(int i=0;i<9;i = i + 1)
+		$write("%d ", fxptGetInt(d0[i]));
+	$display();	
         lbx0 <= d0;
 endrule
 
 rule _LB5;
 	let d1 <- lb1.get;	
 	lbx1 <= d1;	
-	$display(" line buffer 1");
 endrule
 
 rule _LB6 (s0 != s1 );
@@ -413,7 +416,7 @@ rule disperse(dIn == True);
 		fQ[i].enq(dataIn[i]);
 endrule
 
-method Action put(Vector#(VLEN, DataType) datas) if(outQ.notFull);
+method Action put(Vector#(VLEN, DataType) datas);
 		dIn <= True;
 		dataIn <= datas;
 		//for(int i=0;i<VLEN; i = i + 1)

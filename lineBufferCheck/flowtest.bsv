@@ -6,6 +6,8 @@ import FIFO:: *;
 import FIFOF:: *;
 import datatypes::*;
 import sum8::*;
+import line3::*;
+
 
 #define IMG 256
 
@@ -13,13 +15,14 @@ import sum8::*;
 
 (*synthesize*)
 module mkFlowTest();
-	Sum8 px <- mkSum8;
+	//Sum8 px <- mkSum8;
+	Line3 px <- mkLine3;
 	Reg#(Int#(10)) rx <- mkReg(0);
 	Reg#(Int#(10)) cx <- mkReg(0);
 	Reg#(int) col <- mkReg(0);
 	Reg#(int) count <- mkReg(0);
 	Reg#(Bool) init <- mkReg(False);	
-	Reg#(Bool) init2 <- mkReg(False);	
+	Reg#(Bool) init2 <- mkReg(True);	
 	Reg#(UInt#(16)) idx <- mkReg(0);
 	Reg#(UInt#(16)) idx2 <- mkReg(0);
 	Reg#(UInt#(16)) idx3 <- mkReg(0);
@@ -29,7 +32,7 @@ module mkFlowTest();
 	endrule
 
 
-	rule configure2(init == False && init2 == False);
+	/*rule configure2(init == False && init2 == False);
 		//px.reset(21);
 		if(idx3 == 4)
 			px.loadConfig(24);
@@ -57,7 +60,7 @@ module mkFlowTest();
 		if(idx == 27)
 			init2 <= True;	
 		idx <= idx + 1;
-	endrule
+	endrule*/
 
 
 	rule send(count%100==0 && init2 == True);
@@ -72,17 +75,20 @@ module mkFlowTest();
 		if(cx < 16 && rx < 16) begin
 		Int#(10) dx = (rx * cx + 10)%255;
 		DataType d = fromInt(dx);
-			px.put(unpack(zeroExtend(pack(d))));
+			px.putFmap(unpack(zeroExtend(pack(d))));
 		end
 		else begin
 			Vector#(32,DataType) x = replicate(0);
-			px.put(x);
+			px.putFmap(x[0]);
 		end
 	endrule
 
-	rule receive (count%1000==0 && init2 == True);
+	rule receive (count%10000==0 && init2 == True);
 		let b <- px.get;
-		$display(" %d ", fxptGetInt(b[2]));
+	for(int i=0;i<9;i = i + 1)
+		$write("%d ", fxptGetInt(b[i]));
+	$display();	
+		//$display(" %d ", fxptGetInt(b[2]));
 		col <= col+1;
 		if(col == 195) begin
 			$finish(0);
