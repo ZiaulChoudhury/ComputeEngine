@@ -10,6 +10,7 @@ import Vector::*;
 import permute::*;
 import BRAMFIFO::*;
 import line3::*;
+import MULT_wrapper::*;
 
 #define  VLEN 32
 
@@ -33,6 +34,7 @@ module mkSum8(Sum8);
 Reg#(DataType) _T0[L0];
 Reg#(DataType) _L0[L0];
 Reg#(DataType) __L0[L0];
+Reg#(DataType) ___L0[L0];
 Reg#(DataType) _T1[L1];
 Reg#(DataType) __T1[L1];
 Reg#(DataType) _L1[L1];
@@ -69,6 +71,7 @@ for(int i=0;i<L0; i = i + 1) begin
 		_T0[i] <- mkReg(0);
 		_L0[i] <- mkReg(0);
 		__L0[i] <- mkReg(0);
+		___L0[i] <- mkReg(0);
 	if(i < L1) begin
 		_T1[i] <- mkReg(0);
 		__T1[i] <- mkReg(0);
@@ -99,6 +102,8 @@ FIFOF#(Bit#(1)) p9 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p10 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p11 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p12 <- mkPipelineFIFOF;
+FIFOF#(Bit#(1)) p13 <- mkPipelineFIFOF;
+FIFOF#(Bit#(1)) p14 <- mkPipelineFIFOF;
 
 
 Reg#(Vector#(96, DataType)) inReg <- mkRegU;
@@ -144,6 +149,11 @@ Wire#(Bool) rx <- mkWire;
 Wire#(Bool) dIn <- mkWire;
 Wire#(Vector#(VLEN, DataType)) dataIn <- mkWire;
 
+
+MULT_Ifc       m[L0];
+
+for(int i=0;i<L0; i = i + 1)
+	m[i] <- mkMULT;
 
 for(UInt#(6) i = 0; i<VLEN; i = i + 1) begin
 
@@ -290,6 +300,16 @@ rule act9;
 	p12.enq(1);
 endrule
 
+rule act10;
+	p12.deq;	
+	p13.enq(1);
+endrule
+
+rule act11;
+	p13.deq;	
+	p14.enq(1);
+endrule
+
 for(int i=0;i<L0;i=i+1) begin
 rule _PERMUTE;
 	_PERM[i].put(_DR1[i%4]);	
@@ -303,12 +323,28 @@ endrule
 
 end
 
+
+for(int i=0; i<L0; i = i + 1)
+rule _SCALE;
+		DataType d = 1;
+		m[i].put(pack(_T0[i]),pack(d));
+		___L0[i] <= _L0[i];
+endrule
+
 rule _SAD2_0;
-			for(int i=0; i<L0; i = i + 1)
-				__L0[i] <= _L0[i];
 			
-			for(int i=0;i<L1;i=i+1)
-				__T1[i] <=  fxptTruncate(fxptAdd(_T0[2*i], _T0[2*i+1]));
+			for(int i=0; i<L0; i = i + 1)
+				__L0[i] <= ___L0[i];
+			
+			for(int i=0;i<L1;i=i+1) begin
+				FixedPoint#(30,2) _a = unpack(m[2*i].read_response());
+				DataType a = fxptTruncate(_a);
+			
+				FixedPoint#(30,2) _b = unpack(m[2*i+1].read_response());
+				DataType b = fxptTruncate(_b);
+				
+				__T1[i] <=  fxptTruncate(fxptAdd(a, b));
+			end
 endrule
 rule _SAD2_1;
 		Vector#(L0,DataType) tempL0 = replicate(0);
@@ -400,7 +436,7 @@ endrule
 
 
 rule collect;
-	p12.deq;
+	p14.deq;
 		Vector#(L2,DataType) x = newVector;
 		for(int i=0;i<L2;i = i + 1)
 			x[i] = _L4[i];
@@ -416,8 +452,6 @@ endrule
 method Action put(Vector#(VLEN, DataType) datas) if(outQ.notFull);
 		dIn <= True;
 		dataIn <= datas;
-		//for(int i=0;i<VLEN; i = i + 1)
-		//	fQ[i].enq(datas[i]);
 endmethod
 	
 method ActionValue#(Vector#(L2,DataType)) get;

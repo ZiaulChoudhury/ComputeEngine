@@ -14,8 +14,8 @@ bluespec:
 	$(BSC)  -sim  -e mkComputeTree -o compute
 
 verilog:
-	$(BSC)  -verilog -u -cpp +RTS -K200M -RTS -parallel-sim-link 8 -steps-max-intervals 1600000 -no-warn-action-shadowing line3.bsv
-	$(BSC)  -verilog -o ver -e mkLine3 *.v 
+	$(BSC)  -verilog -u -cpp +RTS -K200M -RTS -parallel-sim-link 8 -steps-max-intervals 1600000 -no-warn-action-shadowing flowtest.bsv
+	$(BSC)  -verilog -o ver -e mkFlowTest *.v 
 
 verilogTest:
 	$(BSC)  -verilog -u -cpp +RTS -K200M -RTS -parallel-sim-link 8 -steps-max-intervals 1600000 -no-warn-action-shadowing hardware.bsv
@@ -45,6 +45,6 @@ clean:
 
 # Clean all intermediate files, plus Verilog files, executables, schedule outputs
 fullclean:
-	rm -rf  *~  *.bi  *.bo  *.ba  *.h  *.cxx  *.o *.v xsim* *.sched webtalk* vivado*
-	rm -rf  *.exe   *.so  *.sched  *.v  *.vcd xe* ve* xsim* *.sched
+	rm -rf  *~  *.bi  *.bo  *.ba  *.h  *.cxx  *.o  xsim* *.sched webtalk* vivado*
+	rm -rf  *.exe   *.so  *.sched  *.vcd xe* ve* xsim* *.sched
 
