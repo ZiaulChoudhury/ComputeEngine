@@ -9,7 +9,7 @@ import sum8::*;
 
 #define IMG 256
 
-// Image size = IMG - (7- Kerenel Size + 1)
+// Image size = IMG - (7- Kernel Size + 1)
 
 (*synthesize*)
 module mkFlowTest();
@@ -80,7 +80,7 @@ module mkFlowTest();
 		end
 	endrule
 
-	rule receive (count%200==0 && init2 == True);
+	rule receive (count%1==0 && init2 == True);
 		let b <- px.get;
 		$display(" %d %d %d ", fxptGetInt(b[0]), fxptGetInt(b[1]), fxptGetInt(b[2]));
 		col <= col+1;

@@ -39,10 +39,14 @@ Reg#(DataType) _L02[L0];
 Reg#(DataType) _L03[L0];
 
 Reg#(DataType) _T1[L1];
-Reg#(DataType) __T1[L1];
 Reg#(DataType) _L1[L1];
+Reg#(DataType) _L12[L1];
+
+
 Reg#(DataType) _T2[L2]; 
-Reg#(DataType) _L2[L1]; 
+Reg#(DataType) _L2[L1];
+Reg#(DataType) _L22[L1];
+ 
 Reg#(DataType) _T3[L3];
 Reg#(DataType) _L3[L1];
 Reg#(DataType) _T4[L4];
@@ -72,9 +76,10 @@ for(int i=0;i<L0; i = i + 1) begin
 		_L03[i] <- mkReg(0);
 	if(i < L1) begin
 		_T1[i] <- mkReg(0);
-		__T1[i] <- mkReg(0);
 		_L1[i] <- mkReg(0);
+		_L12[i] <- mkReg(0);
 		_L2[i] <- mkReg(0);
+		_L22[i] <- mkReg(0);
 		_L3[i] <- mkReg(0);
 		_L4[i] <- mkReg(0);
 	end
@@ -110,17 +115,17 @@ FIFOF#(Bit#(1)) p18 <- mkPipelineFIFOF;
 
 Reg#(Bit#(1)) combine[6];
 Reg#(Bit#(1)) outLevel[6];
-combine[0] <- mkReg(0);
-combine[1] <- mkReg(0);
-combine[2] <- mkReg(1);
-combine[3] <- mkReg(0);
+
+combine [0] <- mkReg(0);
+combine [1] <- mkReg(0);
+combine [2] <- mkReg(1);
+combine [3] <- mkReg(0);
+
 outLevel[0] <- mkReg(0);
 outLevel[1] <- mkReg(0);
 outLevel[2] <- mkReg(0);
 outLevel[3] <- mkReg(1);
 
-Reg#(UInt#(6)) s0 <- mkReg(0);
-Reg#(UInt#(6)) s1 <- mkReg(63);
 Reg#(UInt#(11)) ldx <- mkReg(0);
 
 Permute _PERM[L0];
@@ -133,26 +138,20 @@ Line3 lb2 <- mkLine3;
 
 Reg#(DataType)       m[L0];
 Binary bL1[L1];
+Binary bL2[L1];
+Binary bL3[L1];
 for(int i=0;i<L0; i = i + 1) begin
 	m[i] <- mkReg(0);
 	if (i < L1)
 		bL1[i] <- mkBinary;
+	if (i < L2)
+		bL2[i] <- mkBinary;
+	if (i < L3)
+		bL3[i] <- mkBinary;
 end
 
-rule _LB;
-		let d  <- lb0.get;
-		let d1 <- lb1.get;
-		let d2 <- lb2.get;
-		fQ.deq;
-		Vector#(96, DataType) x = newVector;
-		for(int i=0; i<32; i = i + 1) begin
-			x[i] = d[i];
-		end
-		for(int i=0;i<L0;i=i+1)
-			_PERM[i].put(x);	
-endrule
 
-
+//########################################################### Configuration #####################################
 for(int i =0;i<4; i = i + 1)
 rule getSft2 (ldx < 5);
 	_LFT[i+1] <= _LFT[i];
@@ -167,6 +166,21 @@ rule loadShifts (ldx == 32);
 	for(int i=0;i<L0; i = i + 1) begin
 		_PERM[i].setIndex(_SFT[i]);
 	end
+endrule
+//################################################################################################################
+
+
+rule _LB;
+		let d  <- lb0.get;
+		let d1 <- lb1.get;
+		let d2 <- lb2.get;
+		fQ.deq;
+		Vector#(96, DataType) x = newVector;
+		for(int i=0; i<32; i = i + 1) begin
+			x[i] = d[i];
+		end
+		for(int i=0;i<L0;i=i+1)
+			_PERM[i].put(x);	
 endrule
 
 rule _MAC;
@@ -220,20 +234,31 @@ rule _SAD2_2;
 endrule
 
 
-
-rule _SAD4;
+rule _SAD4_1;
 		p3.deq;
-		p4.enq(1);
+                p4.enq(1);
+                for(int i=0; i<L1; i = i + 1)
+                                _L12[i] <= _L1[i];
+
+                for(int i=0;i<L2;i=i+1) begin
+                                bL2[i].a_b(_T1[2*i], _T1[2*i+1]);
+                end
+	
+endrule
+
+
+rule _SAD4_2;
+		p4.deq;
+		p5.enq(1);
 		Vector#(L1,DataType) tempL1 = replicate(0);
 		for(int i=0;i<L1; i = i + 1)
-			tempL1[i] = _L1[i];		
+			tempL1[i] = _L12[i];		
 		Vector#(L1,DataType) temp = unpack(pack(tempL1)>> (_LFT[1] << 4));	
 		for(int i=0;i<L2;i=i+1)
-				_T2[i] <=  fxptTruncate(fxptAdd(_T1[2*i], _T1[2*i+1]));
+				_T2[i] <=  bL2[i].c;
 		if(combine[1] == 1) begin	
 			for(int i=0;i<L2;i=i+1) begin
-				DataType a =  fxptTruncate(fxptAdd(_T1[2*i], _T1[2*i+1]));
-				_L2[i]  <=  fxptTruncate(fxptAdd(a,temp[i]));
+				_L2[i]  <=  fxptTruncate(fxptAdd(bL2[i].c,temp[i]));
 			end
 		end
 		else
@@ -246,19 +271,28 @@ rule _SAD4;
 				
 endrule
 
-rule _SAD8;
-		p4.deq;
-		p5.enq(1);
+rule _SAD8_1;
+		 p5.deq;
+                 p6.enq(1);
+                 for(int i=0; i<L1; i = i + 1)
+                        _L22[i] <= _L2[i];
+                 for(int i=0;i<L3;i=i+1) begin
+                                bL3[i].a_b(_T2[2*i], _T2[2*i+1]);
+                 end
+endrule
+
+rule _SAD8_2;
+		p6.deq;
+		p7.enq(1);
 		Vector#(L2,DataType) tempL2 = replicate(0);
 		for(int i=0;i<L2; i = i + 1)
-			tempL2[i] = _L2[i];		
+			tempL2[i] = _L22[i];		
 		Vector#(L2,DataType) temp = unpack(pack(tempL2)>> (_LFT[2] << 4));	
 		for(int i=0;i<L3;i=i+1)
-				_T3[i] <=  fxptTruncate(fxptAdd(_T2[2*i], _T2[2*i+1]));
+				_T3[i] <=  bL3[i].c;
 		if(combine[2] == 1) begin	
 			for(int i=0;i<L3;i=i+1) begin
-				DataType a =  fxptTruncate(fxptAdd(_T2[2*i], _T2[2*i+1]));
-				_L3[i]    <=  fxptTruncate(fxptAdd(a,temp[i]));
+				_L3[i]    <=  fxptTruncate(fxptAdd(bL3[i].c,temp[i]));
 			end
 		end
 		else
@@ -272,8 +306,8 @@ endrule
 
 
 rule _SAD16;
-		p5.deq;
-		p6.enq(1);
+		p7.deq;
+		p8.enq(1);
 		Vector#(L3,DataType) tempL3 = replicate(0);
 		for(int i=0;i<L3; i = i + 1)
 			tempL3[i] = _L3[i];		
@@ -298,7 +332,7 @@ endrule
 
 
 rule collect;
-	p6.deq;
+	p8.deq;
 		Vector#(L2,DataType) x = newVector;
 		for(int i=0;i<L2;i = i + 1)
 			x[i] = _L4[i];
