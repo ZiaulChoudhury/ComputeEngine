@@ -58,7 +58,7 @@ for(int i=0;i<L0;i=i+1)
 _SFT[i] <- mkReg(0);
 
 Reg#(UInt#(16)) _LFT[L0];
-_LFT[0] <- mkReg(448);
+_LFT[0] <- mkReg(0);
 _LFT[1] <- mkReg(0);
 _LFT[2] <- mkReg(0);
 _LFT[3] <- mkReg(0);
@@ -91,6 +91,7 @@ for(int i=0;i<L0; i = i + 1) begin
 		_T4[i] <- mkReg(0);
 end
 
+FIFOF#(Bit#(1)) q0 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p0 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p00 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p1 <- mkPipelineFIFOF;
@@ -151,24 +152,11 @@ for(int i=0;i<L0; i = i + 1) begin
 end
 
 
-//########################################################### Configuration #####################################
-for(int i =0;i<4; i = i + 1)
-rule getSft2 (ldx < 5);
-	_LFT[i+1] <= _LFT[i];
-endrule
-
-for(int i=0;i<L0-1; i = i + 1)
-rule getSfts;
-	_SFT[i+1] <= _SFT[i];	
-endrule
-
-rule loadShifts (ldx == 32);
+rule loadShifts (ldx == 37);
 	for(int i=0;i<L0; i = i + 1) begin
 		_PERM[i].setIndex(_SFT[i]);
 	end
 endrule
-//################################################################################################################
-
 
 rule _LB;
 		let d  <- lb0.get;
@@ -355,10 +343,15 @@ endmethod
 	
 method  Action loadConfig(UInt#(16) inx);
 	if(ldx < 5) begin
-		_LFT[0] <= (inx);
+		for(int i =0;i<4; i = i + 1)
+			_LFT[i] <= _LFT[i+1];
+		_LFT[4] <= (inx);
 	end
-	else
-		_SFT[0] <= truncate(inx);
+	else begin
+		for(int i=0;i<L0-1; i = i + 1)
+			_SFT[i] <= _SFT[i+1];	
+		_SFT[31] <= truncate(inx);
+	end
 	ldx <= ldx + 1;
 endmethod
 
