@@ -60,7 +60,7 @@ module mkFlowTest();
 	endrule
 
 
-	rule send(count%1==0 && init2 == True);
+	rule send(count%10==0 && init2 == True);
 
 		if(cx == 20) begin
 			rx <= rx + 1;
@@ -80,7 +80,7 @@ module mkFlowTest();
 		end
 	endrule
 
-	rule receive (count%1==0 && init2 == True);
+	rule receive (count%200==0 && init2 == True);
 		let b <- px.get;
 		$display(" %d %d %d ", fxptGetInt(b[0]), fxptGetInt(b[1]), fxptGetInt(b[2]));
 		col <= col+1;

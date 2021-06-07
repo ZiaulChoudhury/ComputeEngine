@@ -34,8 +34,10 @@ endinterface
 module mkSum8(Sum8);
 Reg#(DataType) _T0[L0];
 Reg#(DataType) _L0[L0];
-Reg#(DataType) __L0[L0];
-Reg#(DataType) ___L0[L0];
+Reg#(DataType) _L01[L0];
+Reg#(DataType) _L02[L0];
+Reg#(DataType) _L03[L0];
+
 Reg#(DataType) _T1[L1];
 Reg#(DataType) __T1[L1];
 Reg#(DataType) _L1[L1];
@@ -46,13 +48,7 @@ Reg#(DataType) _L3[L1];
 Reg#(DataType) _T4[L4];
 Reg#(DataType) _L4[L1];
 
-FIFOF#(DataType) fQ[VLEN];
-Reg#(DataType)   t[VLEN];
-for(int i=0;i<VLEN; i = i + 1) begin
-        fQ[i] <- mkSizedBRAMFIFOF(8);
-	t [i] <- mkReg(0);
-end
-
+FIFOF#(Vector#(32,DataType)) fQ <- mkSizedBRAMFIFOF(8192);
 Reg#(UInt#(8)) _SFT[L0];
 for(int i=0;i<L0;i=i+1)
 _SFT[i] <- mkReg(0);
@@ -71,8 +67,9 @@ FIFOF#(Vector#(L2,DataType)) outQ <- mkFIFOF;
 for(int i=0;i<L0; i = i + 1) begin
 		_T0[i] <- mkReg(0);
 		_L0[i] <- mkReg(0);
-		__L0[i] <- mkReg(0);
-		___L0[i] <- mkReg(0);
+		_L01[i] <- mkReg(0);
+		_L02[i] <- mkReg(0);
+		_L03[i] <- mkReg(0);
 	if(i < L1) begin
 		_T1[i] <- mkReg(0);
 		__T1[i] <- mkReg(0);
@@ -111,18 +108,12 @@ FIFOF#(Bit#(1)) p17 <- mkPipelineFIFOF;
 FIFOF#(Bit#(1)) p18 <- mkPipelineFIFOF;
 
 
-Reg#(Vector#(96, DataType)) inReg <- mkRegU;
-Reg#(Vector#(96, DataType)) _DR0[2];
-Reg#(Vector#(96, DataType)) _DR1[4];
-
 Reg#(Bit#(1)) combine[6];
 Reg#(Bit#(1)) outLevel[6];
-
 combine[0] <- mkReg(0);
 combine[1] <- mkReg(0);
 combine[2] <- mkReg(1);
 combine[3] <- mkReg(0);
-
 outLevel[0] <- mkReg(0);
 outLevel[1] <- mkReg(0);
 outLevel[2] <- mkReg(0);
@@ -130,14 +121,6 @@ outLevel[3] <- mkReg(1);
 
 Reg#(UInt#(6)) s0 <- mkReg(0);
 Reg#(UInt#(6)) s1 <- mkReg(63);
-
-_DR0[0] <- mkRegU;
-_DR0[1] <- mkRegU;
-_DR1[0] <- mkRegU;
-_DR1[1] <- mkRegU;
-_DR1[2] <- mkRegU;
-_DR1[3] <- mkRegU;
-
 Reg#(UInt#(11)) ldx <- mkReg(0);
 
 Permute _PERM[L0];
@@ -146,10 +129,21 @@ for(int i=0;i<L0;i=i+1)
 
 Line3 lb0 <- mkLine3;
 Line3 lb1 <- mkLine3;
+Line3 lb2 <- mkLine3;
 
+Reg#(DataType)       m[L0];
+Binary bL1[L1];
+for(int i=0;i<L0; i = i + 1) begin
+	m[i] <- mkReg(0);
+	if (i < L1)
+		bL1[i] <- mkBinary;
+end
 
 rule _LB;
-		let d <- lb0.get;
+		let d  <- lb0.get;
+		let d1 <- lb1.get;
+		let d2 <- lb2.get;
+		fQ.deq;
 		Vector#(96, DataType) x = newVector;
 		for(int i=0; i<32; i = i + 1) begin
 			x[i] = d[i];
@@ -175,9 +169,6 @@ rule loadShifts (ldx == 32);
 	end
 endrule
 
-
-
-
 rule _MAC;
 		for(int i=0;i<L0;i=i+1) begin
 		let d <- _PERM[i].get;
@@ -187,20 +178,40 @@ rule _MAC;
 		p0.enq(1);
 endrule
 
-rule _SAD2;
+rule scale;
 		p0.deq;
 		p1.enq(1);
+		DataType d = 1;
+		for(int i = 0;i<L0; i = i + 1) begin
+			m[i] <= fxptTruncate(fxptMult(_T0[i],d));
+			_L01[i] <= _L0[i];
+		end
+endrule
+
+rule _SAD2_1;
+			p1.deq;
+			p2.enq(1);
+			for(int i=0; i<L0; i = i + 1)
+				_L02[i] <= _L01[i];
+			
+			for(int i=0;i<L1;i=i+1) begin
+				bL1[i].a_b(m[2*i], m[2*i+1]);
+			end
+endrule
+
+rule _SAD2_2;
+		p2.deq;
+		p3.enq(1);
 		Vector#(L0,DataType) tempL0 = replicate(0);
 		for(int i=0;i<L0; i = i + 1)
-			tempL0[i] = _L0[i];		
+			tempL0[i] = _L02[i];		
 		Vector#(L0,DataType) temp = unpack(pack(tempL0)>> (_LFT[0] << 4));	
 		for(int i=0;i<L1;i=i+1)
-				_T1[i] <=  fxptTruncate(fxptAdd(_T0[2*i], _T0[2*i+1]));
+				_T1[i] <=  bL1[i].c;
 		
 		if (combine[0] == 1) begin	
 			for(int i=0;i<L1;i=i+1) begin
-				DataType a =  fxptTruncate(fxptAdd(_T0[2*i], _T0[2*i+1]));
-				_L1[i] <= fxptTruncate(fxptAdd(a,temp[i]));
+				_L1[i] <= fxptTruncate(fxptAdd(bL1[i].c,temp[i]));
 			end
 		end
 		else
@@ -211,8 +222,8 @@ endrule
 
 
 rule _SAD4;
-		p1.deq;
-		p2.enq(1);
+		p3.deq;
+		p4.enq(1);
 		Vector#(L1,DataType) tempL1 = replicate(0);
 		for(int i=0;i<L1; i = i + 1)
 			tempL1[i] = _L1[i];		
@@ -236,8 +247,8 @@ rule _SAD4;
 endrule
 
 rule _SAD8;
-		p2.deq;
-		p3.enq(1);
+		p4.deq;
+		p5.enq(1);
 		Vector#(L2,DataType) tempL2 = replicate(0);
 		for(int i=0;i<L2; i = i + 1)
 			tempL2[i] = _L2[i];		
@@ -261,8 +272,8 @@ endrule
 
 
 rule _SAD16;
-		p3.deq;
-		p4.enq(1);
+		p5.deq;
+		p6.enq(1);
 		Vector#(L3,DataType) tempL3 = replicate(0);
 		for(int i=0;i<L3; i = i + 1)
 			tempL3[i] = _L3[i];		
@@ -287,7 +298,7 @@ endrule
 
 
 rule collect;
-	p4.deq;
+	p6.deq;
 		Vector#(L2,DataType) x = newVector;
 		for(int i=0;i<L2;i = i + 1)
 			x[i] = _L4[i];
@@ -298,6 +309,9 @@ endrule
 
 method Action put(Vector#(VLEN, DataType) datas) if(outQ.notFull);
 		lb0.putFmap(datas[0]);	
+		lb1.putFmap(datas[0]);	
+		lb2.putFmap(datas[0]);
+		fQ.enq(datas);	
 endmethod
 	
 method ActionValue#(Vector#(L2,DataType)) get;
