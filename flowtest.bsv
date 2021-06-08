@@ -7,13 +7,13 @@ import FIFOF:: *;
 import datatypes::*;
 import sum8::*;
 
-#define TOTAL_CONFIG_WORDS 37
+#define TOTAL_CONFIG_WORDS 42
 import "BDPI" function Int#(32) readConfig(Int#(32) cId);
 import "BDPI" function Action   initialize();
 
 #define IMG 256
 
-// Image size = IMG - (7- Kernel Size + 1)
+// Image size = IMG + (7- Kernel Size + 1)
 
 (*synthesize*)
 module mkFlowTest();
@@ -64,9 +64,10 @@ module mkFlowTest();
 		end
 	endrule
 
-	rule receive (count%100==0 && init == True);
+	rule receive (count%1000==0 && init == True);
 		let b <- px.get;
-		$display(" %d %d %d ", fxptGetInt(b[0]), fxptGetInt(b[1]), fxptGetInt(b[2]));
+		$display(" %d %d ", fxptGetInt(b[0]), fxptGetInt(b[1]));
+		//$display(" %d ", fxptGetInt(b[0]));
 		col <= col+1;
 		if(col == 195) begin
 			$finish(0);

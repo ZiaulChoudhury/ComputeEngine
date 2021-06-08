@@ -12,7 +12,7 @@ import cacheFIFO::*;
 
 interface Line3;
 	method Action  putFmap(DataType datas);
-	method ActionValue#(Vector#(32,DataType)) get;
+	method ActionValue#(Vector#(64,DataType)) get;
 	method Action  reset(Width imageSize);	
         method Action  clean;
 	method  Action loadShift(UInt#(16) inx);
@@ -72,10 +72,11 @@ for(int i=0;i<8; i = i + 1)
                        	for(UInt#(8) i=0;i<8; i = i + 1) begin
                                        Vector#(8,DataType) dmm <- _LB[i].enQdeQ(dy[i]);
                                        for(UInt#(8) j=0;j<8; j = j + 1) begin
-                                         	d[i*8+j] = dmm[j];	
+                                         	window[i*8+j] = dmm[j];	
 					end
 			end
-						window[0] = d[0];
+			window[63]=0;
+						/*window[0] = d[0];
 						window[1] = d[1];
 						window[2] = d[2];	
 						window[3] = d[8];
@@ -83,7 +84,7 @@ for(int i=0;i<8; i = i + 1)
 						window[5] = d[10];
 						window[6] = d[16];
 						window[7] = d[17];
-						window[8] = d[18];
+						window[8] = d[18];*/
 			if(c1 == img-1)
                                         c1 <= 0;
                         else
@@ -94,23 +95,14 @@ for(int i=0;i<8; i = i + 1)
 			
         endrule
 
-
-	/*rule sumQ;
-		let d = outQ.first; outQ.deq;
-		sum.put(unpack(truncate(pack(d))));
-	endrule*/
 	
 	method Action putFmap(DataType datas);
 				instream.enq(datas);
 	endmethod
 	
-	method ActionValue#(Vector#(32,DataType)) get;
-	//method ActionValue#(DataType) get(UInt#(8) index);
-			//let d <- sum.get;
-			//return d[index]; 
-			//return unpack(extend(pack(d)));
+	method ActionValue#(Vector#(64,DataType)) get;
 			outQ.deq;
-			return unpack(truncate(pack(outQ.first)));
+			return outQ.first;
 	endmethod
 	
 	method Action clean;

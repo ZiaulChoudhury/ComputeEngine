@@ -9,8 +9,8 @@ BSC=bsc
 .PHONY: bluespec verilog
 
 verilog:
-	$(BSC)  -verilog -u -cpp +RTS -K200M -RTS -parallel-sim-link 8 -steps-max-intervals 1600000 -no-warn-action-shadowing flowtest.bsv
-	$(BSC)  -verilog -o ver -e mkFlowTest *.v 
+	$(BSC)  -verilog -u -cpp +RTS -K200M -RTS -parallel-sim-link 8 -steps-max-intervals 1600000 -no-warn-action-shadowing sum8.bsv
+	$(BSC)  -verilog -o ver -e mkSum8 *.v 
 simulate:
 	$(BSC)  -sim  -u -g mkFlowTest +RTS -K200M -RTS -show-schedule -steps-max-intervals 1600000 -parallel-sim-link 8 -no-warn-action-shadowing -cpp  flowtest.bsv
 	$(BSC)  -sim  -e mkFlowTest  +RTS -K200M -RTS -o sim *.ba host.cpp
