@@ -16,7 +16,7 @@ import binary::*;
 #define  VLEN 32
 
 
-#define TOTAL_CONFIG_WORDS 42
+#define TOTAL_CONFIG_WORDS (32+32+10)
 
 #define L0 32
 #define L1 16
@@ -139,11 +139,14 @@ Line3 lb1 <- mkLine3;
 Line3 lb2 <- mkLine3;
 
 Reg#(DataType)       m[L0];
+Reg#(DataType)       weight[L0];
+
 Binary bL1[L1];
 Binary bL2[L2];
 Binary bL3[L3];
 for(int i=0;i<L0; i = i + 1) begin
 	m[i] <- mkReg(0);
+	weight[i] <- mkReg(0);
 	if (i < L1)
 		bL1[i] <- mkBinary;
 	if (i < L2)
@@ -162,10 +165,13 @@ rule _LB;
 		let d  <- lb0.get;
 		let d1 <- lb1.get;
 		let d2 <- lb2.get;
-		fQ.deq;
-		Vector#(192, DataType) x = newVector;
+		let d3 = fQ.first; fQ.deq;
+		Vector#(256, DataType) x = newVector;
 		for(int i=0; i<64; i = i + 1) begin
 			x[i] = d[i];
+		end
+		for(int i=0; i<32; i = i + 1) begin
+			x[i+192] = d3[i];
 		end
 		for(int i=0;i<L0;i=i+1)
 			_PERM[i].put(x);	
@@ -183,9 +189,8 @@ endrule
 rule scale;
 		p0.deq;
 		p1.enq(1);
-		DataType d = 1;
 		for(int i = 0;i<L0; i = i + 1) begin
-			m[i] <= fxptTruncate(fxptMult(_T0[i],d));
+			m[i] <= fxptTruncate(fxptMult(_T0[i],weight[i]));
 			_L01[i] <= _L0[i];
 		end
 endrule
@@ -350,10 +355,16 @@ method  Action loadConfig(UInt#(16) inx);
 			_LFT[i] <= _LFT[i+1];
 		_LFT[9] <= (inx);
 	end
-	else begin
+	else if(ldx < 42) begin
 		for(int i=0;i<L0-1; i = i + 1)
 			_SFT[i] <= _SFT[i+1];	
 		_SFT[31] <= truncate(inx);
+	end
+	else begin	
+		for(int i=0;i<L0-1; i = i + 1)
+			weight[i] <= weight[i+1];	
+		Int#(15) x = unpack(truncate(pack(inx)));
+		weight[31] <= fromInt(x);
 	end
 	ldx <= ldx + 1;
 endmethod

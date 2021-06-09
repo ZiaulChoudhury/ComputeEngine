@@ -21,7 +21,7 @@
 
 unsigned char *input;
 unsigned int  *configuration;
-#define total_config_words (32+5)
+#define total_config_words (32+32+10)
 extern "C" 
 {
         void  initialize()

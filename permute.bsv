@@ -6,7 +6,7 @@ import SpecialFIFOs:: * ;
 import FixedPoint::*;
 
 interface Permute;
-        method Action put(Vector#(192,DataType) inR);
+        method Action put(Vector#(256,DataType) inR);
         method Action setIndex(UInt#(8) inx2);
 	method ActionValue#(DataType) get;
 endinterface
@@ -70,14 +70,16 @@ FIFOF#(Bit#(1)) p4 <- mkPipelineFIFOF;
 
 		
 		
-        method Action put(Vector#(192,DataType) inR);
-		Vector#(3,Vector#(64,DataType)) x = unpack(pack(inR));
+        method Action put(Vector#(256,DataType) inR);
+		Vector#(4,Vector#(64,DataType)) x = unpack(pack(inR));
 		if(stripIndex == 0)
 			i0 <= x[0];
 		else if(stripIndex == 1)
 			i0 <= x[1];
 		else if(stripIndex == 2)
 			i0 <= x[2];
+		else if(stripIndex == 3)
+			i0 <= x[3];
 			
 		p0.enq(1); 
        	endmethod		
