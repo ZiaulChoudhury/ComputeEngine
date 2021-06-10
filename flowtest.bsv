@@ -7,7 +7,7 @@ import FIFOF:: *;
 import datatypes::*;
 import sum8::*;
 
-#define TOTAL_CONFIG_WORDS (32+32+10)
+#define TOTAL_CONFIG_WORDS (32+32+10+16)
 import "BDPI" function Int#(32) readConfig(Int#(32) cId);
 import "BDPI" function Action   initialize();
 
@@ -66,7 +66,7 @@ module mkFlowTest();
 
 	rule receive (count%1000==0 && init == True);
 		let b <- px.get;
-		$display(" %d %d ", fxptGetInt(b[0]), fxptGetInt(b[1]));
+		$display(" %d %d %d %d %d %d %d %d ", fxptGetInt(b[0]), fxptGetInt(b[1]), fxptGetInt(b[2]), b[3],b[4],b[5],b[6],b[7]);
 		col <= col+1;
 		if(col == 195) begin
 			$finish(0);

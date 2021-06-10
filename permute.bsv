@@ -7,7 +7,7 @@ import FixedPoint::*;
 
 interface Permute;
         method Action put(Vector#(256,DataType) inR);
-        method Action setIndex(UInt#(8) inx2);
+        method Action setIndex(UInt#(9) inx2);
 	method ActionValue#(DataType) get;
 endinterface
 
@@ -84,7 +84,7 @@ FIFOF#(Bit#(1)) p4 <- mkPipelineFIFOF;
 		p0.enq(1); 
        	endmethod		
 	 
-        method Action setIndex(UInt#(8) inx2);
+        method Action setIndex(UInt#(9) inx2);
 		stripIndex <= truncate(inx2); 	
 		UInt#(6) inx = unpack(truncate(pack(inx2) >> 2));
 		probe <= inx;

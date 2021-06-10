@@ -16,7 +16,7 @@ import binary::*;
 #define  VLEN 32
 
 
-#define TOTAL_CONFIG_WORDS (32+32+10)
+#define TOTAL_CONFIG_WORDS (32+32+10+16)
 
 #define L0 32
 #define L1 16
@@ -29,7 +29,6 @@ import binary::*;
 interface Sum8;
         method  Action put(Vector#(VLEN, DataType) datas);
 	method  ActionValue#(Vector#(L2,DataType)) get;
-	//method  ActionValue#(DataType) get(UInt#(8) index);
 	method  Action loadConfig(UInt#(16) inx);
 endinterface
 
@@ -55,7 +54,7 @@ Reg#(DataType) _T4[L4];
 Reg#(DataType) _L4[L1];
 
 FIFOF#(Vector#(32,DataType)) fQ <- mkSizedBRAMFIFOF(8192);
-Reg#(UInt#(8)) _SFT[L0];
+Reg#(UInt#(9)) _SFT[L0];
 for(int i=0;i<L0;i=i+1)
 _SFT[i] <- mkReg(0);
 
@@ -200,7 +199,7 @@ rule _SAD2_1;
 			p2.enq(1);
 			Vector#(L0,DataType) tempL0 = replicate(0);
 			for(int i=0; i<L0; i = i + 1)
-				tempL0[i] = _L01[i];
+				tempL0[i] = m[i];
 			tL0 <= unpack(pack(tempL0)>> (_LFT[0] << 4));	
 			for(int i=0;i<L1;i=i+1) begin
 				bL1[i].a_b(m[2*i], m[2*i+1]);
@@ -245,8 +244,9 @@ rule _SAD4_2;
 		p4.deq;
 		p5.enq(1);
 		Vector#(L1,DataType) temp = unpack(pack(tL1)<< (_LFT[3] << 4));	
-		for(int i=0;i<L2;i=i+1)
+		for(int i=0;i<L2;i=i+1) begin
 				_T2[i] <=  bL2[i].c;
+		end
 		if(combine[1] == 1) begin	
 			for(int i=0;i<L2;i=i+1) begin
 				_L2[i]  <=  fxptTruncate(fxptAdd(bL2[i].c,temp[i]));
@@ -342,11 +342,9 @@ method Action put(Vector#(VLEN, DataType) datas) if(outQ.notFull);
 endmethod
 	
 method ActionValue#(Vector#(L2,DataType)) get;
-//method  ActionValue#(DataType) get(UInt#(8) index);
 		outQ.deq;
 		let d = outQ.first;
 		return d;
-		//return d[index];
 endmethod
 	
 method  Action loadConfig(UInt#(16) inx);
@@ -355,17 +353,26 @@ method  Action loadConfig(UInt#(16) inx);
 			_LFT[i] <= _LFT[i+1];
 		_LFT[9] <= (inx);
 	end
-	else if(ldx < 42) begin
+	else if(ldx < (32+10)) begin
 		for(int i=0;i<L0-1; i = i + 1)
 			_SFT[i] <= _SFT[i+1];	
 		_SFT[31] <= truncate(inx);
 	end
-	else begin	
+	else if(ldx < (32+32+10)) begin	
 		for(int i=0;i<L0-1; i = i + 1)
 			weight[i] <= weight[i+1];	
 		Int#(15) x = unpack(truncate(pack(inx)));
 		weight[31] <= fromInt(x);
 	end
+
+	else begin	
+		for(int i=0;i<L1-1; i = i + 1) begin
+			bL1[i].set_operation(bL1[i+1].get_operation);
+		end
+		UInt#(4) x = unpack(truncate(pack(inx)));
+		bL1[L1-1].set_operation(x);
+	end
+	
 	ldx <= ldx + 1;
 endmethod
 
