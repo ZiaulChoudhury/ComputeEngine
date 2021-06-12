@@ -16,7 +16,7 @@ import binary::*;
 #define  VLEN 32
 
 
-#define TOTAL_CONFIG_WORDS (4+4+32+32+10+16+8+4+1)
+#define TOTAL_CONFIG_WORDS (4+4+32+32+10+16+8+4+2+1)
 
 #define L0 32
 #define L1 16
@@ -50,6 +50,8 @@ Reg#(Vector#(L2,DataType)) tL2 <- mkRegU;
  
 Reg#(DataType) _T3[L3];
 Reg#(DataType) _L3[L1];
+Reg#(Vector#(L3,DataType)) tL3 <- mkRegU;
+
 Reg#(DataType) _T4[L4];
 Reg#(DataType) _L4[L1];
 
@@ -143,6 +145,7 @@ Reg#(DataType)       weight[L0];
 Binary bL1[L1];
 Binary bL2[L2];
 Binary bL3[L3];
+Binary bL4[L4];
 for(int i=0;i<L0; i = i + 1) begin
 	m[i] <- mkReg(0);
 	weight[i] <- mkReg(0);
@@ -152,6 +155,8 @@ for(int i=0;i<L0; i = i + 1) begin
 		bL2[i] <- mkBinary;
 	if (i < L3)
 		bL3[i] <- mkBinary;
+	if (i < L4)
+		bL4[i] <- mkBinary;
 end
 
 rule loadShifts (ldx == TOTAL_CONFIG_WORDS);
@@ -295,23 +300,29 @@ rule _SAD8_2;
 					_L3[i] <= temp[i];
 endrule
 
+rule _SAD16_1;
+		 p7.deq;
+		 p8.enq(1);
+		 Vector#(L3,DataType) temp = replicate(0);
+                 for(int i=0; i<L3; i = i + 1)
+                        temp[i] = _L3[i];
+                 tL3 <= unpack(pack(temp) >> (_LFT[6] << 4));
+                 for(int i=0;i<L4;i=i+1) begin
+                                bL4[i].a_b(_T3[2*i], _T3[2*i+1]);
+                 end
 
-rule _SAD16;
-		p7.deq;
-		p8.enq(1);
-		Vector#(L3,DataType) tempL3 = replicate(0);
-		for(int i=0;i<L3; i = i + 1)
-			tempL3[i] = _L3[i];		
+endrule
 
-		Vector#(L3,DataType) tempx = unpack(pack(tempL3)>> (_LFT[6] << 4));
-		Vector#(L3,DataType) temp  = unpack(pack(tempx)<< (_LFT[7] << 4));
+rule _SAD16_2;
 
+		p8.deq;
+		p9.enq(1);
+		Vector#(L3,DataType) temp  = unpack(pack(tL3)<< (_LFT[7] << 4));
 		for(int i=0;i<L4;i=i+1)
-				_T4[i] <=  fxptTruncate(fxptAdd(_T3[2*i], _T3[2*i+1]));
+				_T4[i] <=  bL4[i].c;
 		if(combine[3] == 1) begin	
 			for(int i=0;i<L4;i=i+1) begin
-				DataType a =  fxptTruncate(fxptAdd(_T3[2*i], _T3[2*i+1]));
-				_L4[i]    <=  fxptTruncate(fxptAdd(a,temp[i]));
+				_L4[i]    <=  fxptTruncate(fxptAdd(bL4[i].c,temp[i]));
 			end
 		end
 		else
@@ -325,7 +336,7 @@ endrule
 
 
 rule collect;
-	p8.deq;
+	p9.deq;
 		Vector#(L2,DataType) x = newVector;
 		for(int i=0;i<L2;i = i + 1)
 			x[i] = _L4[i];
@@ -358,7 +369,7 @@ method  Action loadConfig(UInt#(16) inx);
 			outLevel[i] <= outLevel[i+1];
 		outLevel[3] <= unpack(truncate(pack(inx)));
 	end	
-	else if(ldx < (10+4+4)) begin
+	else if(ldx < (4+4+10)) begin
 		for(int i = 0;i<9; i = i + 1)
 			_LFT[i] <= _LFT[i+1];
 		_LFT[9] <= (inx);
@@ -368,14 +379,14 @@ method  Action loadConfig(UInt#(16) inx);
 			_SFT[i] <= _SFT[i+1];	
 		_SFT[31] <= truncate(inx);
 	end
-	else if(ldx < (32+32+10+4+4)) begin	
+	else if(ldx < (4+4+32+32+10)) begin	
 		for(int i=0;i<L0-1; i = i + 1)
 			weight[i] <= weight[i+1];	
 		Int#(15) x = unpack(truncate(pack(inx)));
 		weight[31] <= fromInt(x);
 	end
 
-	else if (ldx < (32+32+10+16+4+4))begin	
+	else if (ldx < (4+4+32+32+10+16))begin	
 		for(int i=0;i<L1-1; i = i + 1) begin
 			bL1[i].set_operation(bL1[i+1].get_operation);
 		end
@@ -383,7 +394,7 @@ method  Action loadConfig(UInt#(16) inx);
 		bL1[L1-1].set_operation(x);
 	end
 	
-	else if( ldx < (32+32+10+16+8+4+4)) begin
+	else if( ldx < (4+4+32+32+10+16+8)) begin
 		for(int i=0;i<L2-1; i = i + 1) begin
 			bL2[i].set_operation(bL2[i+1].get_operation);
 		end
@@ -392,7 +403,7 @@ method  Action loadConfig(UInt#(16) inx);
 		
 	end
 	
-	else if(ldx < (32+32+10+16+8+4+4+4)) begin
+	else if(ldx < (4+4+32+32+10+16+8+4)) begin
 		for(int i=0;i<L3-1; i = i + 1) begin
 			bL3[i].set_operation(bL3[i+1].get_operation);
 		end
@@ -400,13 +411,19 @@ method  Action loadConfig(UInt#(16) inx);
 		bL3[L3-1].set_operation(x);
 	end
 
+	else if(ldx < (4+4+32+32+10+16+8+4+2)) begin
+                for(int i=0;i<L4-1; i = i + 1) begin
+                        bL4[i].set_operation(bL4[i+1].get_operation);
+                end
+                UInt#(4) x = unpack(truncate(pack(inx)));
+                bL4[L4-1].set_operation(x);
+        end
+
 	else begin
-			
 		UInt#(9) x = unpack(truncate(pack(inx)));
 		lb0.reset(x);
 		lb1.reset(x);
 		lb2.reset(x);
-		
 	end
 	
 	
