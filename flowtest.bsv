@@ -7,13 +7,13 @@ import FIFOF:: *;
 import datatypes::*;
 import sum8::*;
 
-#define TOTAL_CONFIG_WORDS (32+32+10+16)
+#define TOTAL_CONFIG_WORDS (32+32+10+16+8+4+4+4+1)
 import "BDPI" function Int#(32) readConfig(Int#(32) cId);
 import "BDPI" function Action   initialize();
 
-#define IMG 256
+#define IMG 16
 
-// Image size = IMG + (7- Kernel Size + 1)
+//img = IMG + (8 - Kernel Size)
 
 (*synthesize*)
 module mkFlowTest();
@@ -22,6 +22,7 @@ module mkFlowTest();
 	Reg#(Int#(10)) cx <- mkReg(0);
 	Reg#(int) col <- mkReg(0);
 	Reg#(int) cId <- mkReg(0);
+	Reg#(int) img <- mkReg(0);
 	Reg#(int) count <- mkReg(0);
 	Reg#(Bool) init <- mkReg(False);	
 	Reg#(Bool) load <- mkReg(False);	
@@ -38,22 +39,24 @@ module mkFlowTest();
 	rule configure(init == False && load == True);
 			Int#(32) wrd = readConfig(cId);
 			px.loadConfig(truncate(unpack(pack(wrd))));
-			if(cId == TOTAL_CONFIG_WORDS-1)
+			if(cId == TOTAL_CONFIG_WORDS-1) begin
 				init <= True;
+				img <= wrd;
+			end
 			cId <= cId + 1;
 			load <= False;	
 	endrule
 
 	rule send(count%10==0 && init == True);
 
-		if(cx == 20) begin
+		if(cx == truncate((img-1))) begin
 			rx <= rx + 1;
 			cx <= 0;
 		end
 		else
 			cx <= cx + 1;
 		
-		if(cx < 16 && rx < 16) begin
+		if(cx < IMG && rx < IMG) begin
 		Int#(10) dx = (rx * cx + 10)%255;
 		DataType d = fromInt(dx);
 			px.put(unpack(zeroExtend(pack(d))));
@@ -64,11 +67,11 @@ module mkFlowTest();
 		end
 	endrule
 
-	rule receive (count%1000==0 && init == True);
+	rule receive (count%1==0 && init == True);
 		let b <- px.get;
 		$display(" %d %d %d %d %d %d %d %d ", fxptGetInt(b[0]), fxptGetInt(b[1]), fxptGetInt(b[2]), b[3],b[4],b[5],b[6],b[7]);
 		col <= col+1;
-		if(col == 195) begin
+		if(col == 143) begin
 			$finish(0);
 		end
 	endrule

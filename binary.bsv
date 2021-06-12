@@ -13,7 +13,7 @@ endinterface
 (*synthesize*)
 module mkBinary(Binary);
 	Reg#(DataType) cOut <- mkReg(0);
-	Reg#(UInt#(4)) op   <- mkReg(1);
+	Reg#(UInt#(4)) op   <- mkReg(0);
 		
         method Action   a_b(DataType _a,DataType _b);
 		if(op == 1)

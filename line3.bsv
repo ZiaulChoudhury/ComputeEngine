@@ -23,7 +23,7 @@ module mkLine3(Line3);
 
 //############### CONFIG PARAMETERS ######################################
 Reg#(Width)     alpha      <-  mkReg(8);
-Reg#(Width)     img        <-  mkReg(21);
+Reg#(Width)     img        <-  mkReg(0);
 FIFOF#(Vector#(64,DataType)) outQ <- mkFIFOF;
 CacheFIFOF  _LB[8];
 FIFOF#(DataType)                                instream <- mkFIFOF;

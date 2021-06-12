@@ -16,7 +16,7 @@ import binary::*;
 #define  VLEN 32
 
 
-#define TOTAL_CONFIG_WORDS (32+32+10+16)
+#define TOTAL_CONFIG_WORDS (4+4+32+32+10+16+8+4+1)
 
 #define L0 32
 #define L1 16
@@ -119,13 +119,13 @@ Reg#(Bit#(1)) outLevel[6];
 
 combine [0] <- mkReg(0);
 combine [1] <- mkReg(0);
-combine [2] <- mkReg(1);
+combine [2] <- mkReg(0);
 combine [3] <- mkReg(0);
 
 outLevel[0] <- mkReg(0);
 outLevel[1] <- mkReg(0);
 outLevel[2] <- mkReg(0);
-outLevel[3] <- mkReg(1);
+outLevel[3] <- mkReg(0);
 
 Reg#(UInt#(11)) ldx <- mkReg(0);
 
@@ -348,30 +348,67 @@ method ActionValue#(Vector#(L2,DataType)) get;
 endmethod
 	
 method  Action loadConfig(UInt#(16) inx);
-	if(ldx < 10) begin
+	if(ldx < 4) begin	
+		for(int i = 0;i<3; i = i + 1)
+			combine[i] <= combine[i+1];
+		combine[3] <= unpack(truncate(pack(inx)));
+	end
+	else if (ldx < (4+4)) begin	
+		for(int i = 0;i<3; i = i + 1)
+			outLevel[i] <= outLevel[i+1];
+		outLevel[3] <= unpack(truncate(pack(inx)));
+	end	
+	else if(ldx < (10+4+4)) begin
 		for(int i = 0;i<9; i = i + 1)
 			_LFT[i] <= _LFT[i+1];
 		_LFT[9] <= (inx);
 	end
-	else if(ldx < (32+10)) begin
+	else if(ldx < (32+10+4+4)) begin
 		for(int i=0;i<L0-1; i = i + 1)
 			_SFT[i] <= _SFT[i+1];	
 		_SFT[31] <= truncate(inx);
 	end
-	else if(ldx < (32+32+10)) begin	
+	else if(ldx < (32+32+10+4+4)) begin	
 		for(int i=0;i<L0-1; i = i + 1)
 			weight[i] <= weight[i+1];	
 		Int#(15) x = unpack(truncate(pack(inx)));
 		weight[31] <= fromInt(x);
 	end
 
-	else begin	
+	else if (ldx < (32+32+10+16+4+4))begin	
 		for(int i=0;i<L1-1; i = i + 1) begin
 			bL1[i].set_operation(bL1[i+1].get_operation);
 		end
 		UInt#(4) x = unpack(truncate(pack(inx)));
 		bL1[L1-1].set_operation(x);
 	end
+	
+	else if( ldx < (32+32+10+16+8+4+4)) begin
+		for(int i=0;i<L2-1; i = i + 1) begin
+			bL2[i].set_operation(bL2[i+1].get_operation);
+		end
+		UInt#(4) x = unpack(truncate(pack(inx)));
+		bL2[L2-1].set_operation(x);
+		
+	end
+	
+	else if(ldx < (32+32+10+16+8+4+4+4)) begin
+		for(int i=0;i<L3-1; i = i + 1) begin
+			bL3[i].set_operation(bL3[i+1].get_operation);
+		end
+		UInt#(4) x = unpack(truncate(pack(inx)));
+		bL3[L3-1].set_operation(x);
+	end
+
+	else begin
+			
+		UInt#(9) x = unpack(truncate(pack(inx)));
+		lb0.reset(x);
+		lb1.reset(x);
+		lb2.reset(x);
+		
+	end
+	
 	
 	ldx <= ldx + 1;
 endmethod
