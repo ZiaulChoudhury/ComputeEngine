@@ -27,8 +27,8 @@ import binary::*;
 
 
 interface Sum8;
-        method  Action put(Vector#(L0, DataType) datas);
-	method  ActionValue#(Vector#(L0,DataType)) get;
+        method  Action put(Vector#(VLEN, DataType) datas);
+	method  ActionValue#(Vector#(L2,DataType)) get;
 	method  Action loadConfig(UInt#(16) inx);
 endinterface
 
@@ -46,11 +46,11 @@ Reg#(Vector#(L1,DataType)) tL1 <- mkRegU;
 
 Reg#(DataType) _T2[L2]; 
 Reg#(DataType) _L2[L1];
-Reg#(Vector#(L1,DataType)) tL2 <- mkRegU;
+Reg#(Vector#(L2,DataType)) tL2 <- mkRegU;
  
 Reg#(DataType) _T3[L3];
 Reg#(DataType) _L3[L1];
-Reg#(Vector#(L1,DataType)) tL3 <- mkRegU;
+Reg#(Vector#(L2,DataType)) tL3 <- mkRegU;
 
 Reg#(DataType) _T4[L4];
 Reg#(DataType) _L4[L1];
@@ -260,6 +260,10 @@ rule _SAD4_2;
 				_L2[i] <= temp[i];
 		end
 		else
+			if(outLevel[1] == 1)
+				for(int i=0;i<L1;i=i+1)
+					_L2[i] <= _L1[i];
+			else
 				for(int i=0;i<L1;i=i+1)
 					_L2[i] <= temp[i];
 				
@@ -268,7 +272,7 @@ endrule
 rule _SAD8_1;
 		 p5.deq;
                  p6.enq(1);
-		 Vector#(L1,DataType) temp = replicate(0);
+		 Vector#(L2,DataType) temp = replicate(0);
                  for(int i=0; i<L2; i = i + 1) begin
                         temp[i] = _L2[i];		
 		 end
@@ -281,7 +285,7 @@ endrule
 rule _SAD8_2;
 		p6.deq;
 		p7.enq(1);
-		Vector#(L1,DataType) temp = unpack(pack(tL2) << (_LFT[5] << 4));	
+		Vector#(L2,DataType) temp = unpack(pack(tL2) << (_LFT[5] << 4));	
 		for(int i=0;i<L3;i=i+1)begin
 				_T3[i] <=  bL3[i].c;
 		end
@@ -289,19 +293,22 @@ rule _SAD8_2;
 			for(int i=0;i<L3;i=i+1) begin
 				_L3[i]    <=  fxptTruncate(fxptAdd(bL3[i].c,temp[i]));
 			end
-			for(int i=L3;i<L1;i=i+1)
-				_L3[i]    <= temp[i]; 
+				_L3[4]    <= temp[4]; 
 		end
 		else
+			if(outLevel[2] == 1)
 				for(int i=0;i<L1;i=i+1)
+					_L3[i] <= _L2[i];
+			else
+				for(int i=0;i<L2;i=i+1)
 					_L3[i] <= temp[i];
 endrule
 
 rule _SAD16_1;
 		 p7.deq;
 		 p8.enq(1);
-		 Vector#(L1,DataType) temp = replicate(0);
-                 for(int i=0; i<L1; i = i + 1) begin
+		 Vector#(L2,DataType) temp = replicate(0);
+                 for(int i=0; i<L2; i = i + 1) begin
                         temp[i] = _L3[i];
 		 end
                  tL3 <= unpack(pack(temp) >> (_LFT[6] << 4));
@@ -315,18 +322,22 @@ rule _SAD16_2;
 
 		p8.deq;
 		p9.enq(1);
-		Vector#(L1,DataType) temp  = unpack(pack(tL3)<< (_LFT[7] << 4));
+		Vector#(L2,DataType) temp  = unpack(pack(tL3)<< (_LFT[7] << 4));
 		for(int i=0;i<L4;i=i+1)
 				_T4[i] <=  bL4[i].c;
 		if(combine[3] == 1) begin	
 			for(int i=0;i<L4;i=i+1) begin
 				_L4[i]    <=  fxptTruncate(fxptAdd(bL4[i].c,temp[i]));
 			end
-			for(int i=L4;i<L1;i=i+1)
-				_L4[i] <= temp[i];
+			_L4[2] <= temp[2];
+			_L4[3] <= temp[3];
 		end
 		else
+			if(outLevel[3] == 1)
 				for(int i=0;i<L1;i=i+1)
+					_L4[i] <= _L3[i];
+			else
+				for(int i=0;i<L3;i=i+1)
 					_L4[i] <= temp[i];
 endrule
 
@@ -341,17 +352,17 @@ rule collect;
 endrule
 
 
-method Action put(Vector#(L0, DataType) datas) if(outQ.notFull);
+method Action put(Vector#(VLEN, DataType) datas) if(outQ.notFull);
 		lb0.putFmap(datas[0]);	
 		lb1.putFmap(datas[0]);	
 		lb2.putFmap(datas[0]);
 		fQ.enq(datas);	
 endmethod
 	
-method ActionValue#(Vector#(L0,DataType)) get;
+method ActionValue#(Vector#(L2,DataType)) get;
 		outQ.deq;
 		let d = outQ.first;
-		return unpack(zeroExtend(pack(d)));
+		return d;
 endmethod
 	
 method  Action loadConfig(UInt#(16) inx);
