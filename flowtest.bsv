@@ -7,7 +7,17 @@ import FIFOF:: *;
 import datatypes::*;
 import sum8::*;
 
-#define TOTAL_CONFIG_WORDS (4+4+32+32+10+16+8+4+2+1)
+
+#define L0 64
+#define L1 32
+#define L2 16
+#define L3 8
+#define L4 4
+#define L5 2
+
+
+#define TOTAL_CONFIG_WORDS (4+4+L0+L0+10+L1+L2+L3+L4+1)
+
 import "BDPI" function Int#(32) readConfig(Int#(32) cId);
 import "BDPI" function Action   initialize();
 

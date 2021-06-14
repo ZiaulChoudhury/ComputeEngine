@@ -18,10 +18,17 @@
 #include <arpa/inet.h>
 #include <math.h>
 
+#define L0 64
+#define L1 32
+#define L2 16
+#define L3 8
+#define L4 4
+#define L5 2
+
 
 unsigned char *input;
 unsigned int  *configuration;
-#define total_config_words (4+4+32+32+10+16+8+4+2+1)
+#define total_config_words (4+4+10+L0+L0+L1+L2+L3+L4+1)
 extern "C" 
 {
         void  initialize()

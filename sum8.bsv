@@ -16,19 +16,20 @@ import binary::*;
 #define  VLEN 32
 
 
-#define TOTAL_CONFIG_WORDS (4+4+32+32+10+16+8+4+2+1)
+#define L0 64
+#define L1 32
+#define L2 16
+#define L3 8
+#define L4 4
+#define L5 2
 
-#define L0 32
-#define L1 16
-#define L2 8
-#define L3 4
-#define L4 2
-#define L5 1
 
+#define TOTAL_CONFIG_WORDS (4+4+L0+L0+10+L1+L2+L3+L4+1)
 
 interface Sum8;
-        method  Action put(Vector#(L0, DataType) datas);
-	method  ActionValue#(Vector#(L0,DataType)) get;
+        method  Action put(Vector#(32, DataType) datas);
+	//method  ActionValue#(Vector#(32,DataType)) get;
+	method  ActionValue#(DataType) get(UInt#(6) index);
 	method  Action loadConfig(UInt#(16) inx);
 endinterface
 
@@ -55,7 +56,7 @@ Reg#(Vector#(L1,DataType)) tL3 <- mkRegU;
 Reg#(DataType) _T4[L4];
 Reg#(DataType) _L4[L1];
 
-FIFOF#(Vector#(32,DataType)) fQ <- mkSizedBRAMFIFOF(8192);
+FIFOF#(Vector#(32,DataType)) fQ <- mkSizedBRAMFIFOF(2048);
 Reg#(UInt#(9)) _SFT[L0];
 for(int i=0;i<L0;i=i+1)
 _SFT[i] <- mkReg(0);
@@ -341,17 +342,19 @@ rule collect;
 endrule
 
 
-method Action put(Vector#(L0, DataType) datas) if(outQ.notFull);
+method Action put(Vector#(32, DataType) datas) if(outQ.notFull);
 		lb0.putFmap(datas[0]);	
 		lb1.putFmap(datas[0]);	
 		lb2.putFmap(datas[0]);
 		fQ.enq(datas);	
 endmethod
 	
-method ActionValue#(Vector#(L0,DataType)) get;
+//method ActionValue#(Vector#(32,DataType)) get;
+method  ActionValue#(DataType) get(UInt#(6) index);
 		outQ.deq;
 		let d = outQ.first;
-		return unpack(zeroExtend(pack(d)));
+		//return unpack(zeroExtend(pack(d)));
+		return d[index];
 endmethod
 	
 method  Action loadConfig(UInt#(16) inx);
@@ -370,19 +373,19 @@ method  Action loadConfig(UInt#(16) inx);
 			_LFT[i] <= _LFT[i+1];
 		_LFT[9] <= (inx);
 	end
-	else if(ldx < (32+10+4+4)) begin
+	else if(ldx < (L0+10+4+4)) begin
 		for(int i=0;i<L0-1; i = i + 1)
 			_SFT[i] <= _SFT[i+1];	
-		_SFT[31] <= truncate(inx);
+		_SFT[L0-1] <= truncate(inx);
 	end
-	else if(ldx < (4+4+32+32+10)) begin	
+	else if(ldx < (4+4+L0+L0+10)) begin	
 		for(int i=0;i<L0-1; i = i + 1)
 			weight[i] <= weight[i+1];	
 		Int#(15) x = unpack(truncate(pack(inx)));
-		weight[31] <= fromInt(x);
+		weight[L0-1] <= fromInt(x);
 	end
 
-	else if (ldx < (4+4+32+32+10+16))begin	
+	else if (ldx < (4+4+L0+L0+10+L1))begin	
 		for(int i=0;i<L1-1; i = i + 1) begin
 			bL1[i].set_operation(bL1[i+1].get_operation);
 		end
@@ -390,7 +393,7 @@ method  Action loadConfig(UInt#(16) inx);
 		bL1[L1-1].set_operation(x);
 	end
 	
-	else if( ldx < (4+4+32+32+10+16+8)) begin
+	else if( ldx < (4+4+L0+L0+10+L1+L2)) begin
 		for(int i=0;i<L2-1; i = i + 1) begin
 			bL2[i].set_operation(bL2[i+1].get_operation);
 		end
@@ -399,7 +402,7 @@ method  Action loadConfig(UInt#(16) inx);
 		
 	end
 	
-	else if(ldx < (4+4+32+32+10+16+8+4)) begin
+	else if(ldx < (4+4+L0+L0+10+L1+L2+L3)) begin
 		for(int i=0;i<L3-1; i = i + 1) begin
 			bL3[i].set_operation(bL3[i+1].get_operation);
 		end
@@ -407,7 +410,7 @@ method  Action loadConfig(UInt#(16) inx);
 		bL3[L3-1].set_operation(x);
 	end
 
-	else if(ldx < (4+4+32+32+10+16+8+4+2)) begin
+	else if(ldx < (4+4+L0+L0+10+L1+L2+L3+L4)) begin
                 for(int i=0;i<L4-1; i = i + 1) begin
                         bL4[i].set_operation(bL4[i+1].get_operation);
                 end
