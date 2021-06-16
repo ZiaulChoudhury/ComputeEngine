@@ -5,7 +5,7 @@ import Vector:: *;
 import FIFO:: *;
 import FIFOF:: *;
 import datatypes::*;
-import sum8::*;
+import pecore::*;
 
 
 #define L0 64
@@ -27,7 +27,7 @@ import "BDPI" function Action   initialize();
 
 (*synthesize*)
 module mkFlowTest();
-	Sum8 px <- mkSum8;
+	PECore px <- mkPECore;
 	Reg#(Int#(10)) rx <- mkReg(0);
 	Reg#(Int#(10)) cx <- mkReg(0);
 	Reg#(int) col <- mkReg(0);

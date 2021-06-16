@@ -1,4 +1,4 @@
-package sum8;
+package pecore;
 import FixedPoint::*;
 import pulse::*;
 import FIFO::*;
@@ -26,15 +26,14 @@ import binary::*;
 
 #define TOTAL_CONFIG_WORDS (4+4+L0+L0+10+L1+L2+L3+L4+1)
 
-interface Sum8;
+interface PECore;
         method  Action put(Vector#(32, DataType) datas);
-	//method  ActionValue#(Vector#(32,DataType)) get;
-	method  ActionValue#(DataType) get(UInt#(6) index);
+	method  ActionValue#(Vector#(32,DataType)) get;
 	method  Action loadConfig(UInt#(16) inx);
 endinterface
 
 (*synthesize*)
-module mkSum8(Sum8);
+module mkPECore(PECore);
 Reg#(DataType) _T0[L0];
 Reg#(DataType) _L0[L0];
 Reg#(Vector#(L0,DataType)) tL0 <- mkRegU;
@@ -349,12 +348,10 @@ method Action put(Vector#(32, DataType) datas) if(outQ.notFull);
 		fQ.enq(datas);	
 endmethod
 	
-//method ActionValue#(Vector#(32,DataType)) get;
-method  ActionValue#(DataType) get(UInt#(6) index);
+method ActionValue#(Vector#(32,DataType)) get;
 		outQ.deq;
 		let d = outQ.first;
-		//return unpack(zeroExtend(pack(d)));
-		return d[index];
+		return unpack(zeroExtend(pack(d)));
 endmethod
 	
 method  Action loadConfig(UInt#(16) inx);
@@ -381,8 +378,11 @@ method  Action loadConfig(UInt#(16) inx);
 	else if(ldx < (4+4+L0+L0+10)) begin	
 		for(int i=0;i<L0-1; i = i + 1)
 			weight[i] <= weight[i+1];	
-		Int#(15) x = unpack(truncate(pack(inx)));
-		weight[L0-1] <= fromInt(x);
+		DataType x = unpack(truncate(pack(inx)));
+		$display("%d", inx);
+		fxptWrite(4,x);
+		$finish(0);
+		weight[L0-1] <= x;
 	end
 
 	else if (ldx < (4+4+L0+L0+10+L1))begin	

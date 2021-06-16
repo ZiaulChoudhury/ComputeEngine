@@ -18,6 +18,12 @@ module mkBinary(Binary);
         method Action   a_b(DataType _a,DataType _b);
 		if(op == 1)
 			cOut <= fxptTruncate(fxptAdd(_a,_b));
+		else if(op == 2)	
+			cOut <= fxptTruncate(fxptMult(_a,_b));
+		else if(op == 3)	
+			cOut <= fxptTruncate(max(_a,_b));
+		else if(op == 4)	
+			cOut <= fxptTruncate(min(_a,_b));
 		else if(op == 0)
 			cOut <= 0;
 	endmethod
