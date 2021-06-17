@@ -7,7 +7,6 @@ import FIFOF::*;
 
 
 interface Stdin;
-	//method ActionValue#(Bit#(512)) get;
 	method ActionValue#(Bit#(32)) get;
 	method Action put(Bit#(512) datas);
 endinterface

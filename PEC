@@ -57,7 +57,7 @@ Reg#(DataType) _T4[L4];
 Reg#(DataType) _L4[L1];
 
 FIFOF#(Vector#(32,DataType)) fQ <- mkSizedBRAMFIFOF(2048);
-Reg#(UInt#(12)) _SFT[L0];
+Reg#(UInt#(9)) _SFT[L0];
 for(int i=0;i<L0;i=i+1)
 _SFT[i] <- mkReg(0);
 
@@ -145,7 +145,6 @@ end
 Line3 lb0 <- mkLine3;
 
 Reg#(DataType)       m[L0];
-//MULT_Ifc       	     dut[L0];
 Reg#(DataType)       weight[L0];
 
 Binary bL1[L1];
@@ -155,7 +154,6 @@ Binary bL4[L4];
 for(int i=0;i<L0; i = i + 1) begin
 	m[i] <- mkReg(0);
 	weight[i] <- mkReg(0);
-	//dut[i] <- mkMULT;
 	if (i < L1)
 		bL1[i] <- mkBinary;
 	if (i < L2)
@@ -171,9 +169,8 @@ Reg#(Vector#(32,DataType)) tQ2 <- mkRegU;
 
 rule loadShifts (ldx == TOTAL_CONFIG_WORDS);
 	for(int i=0;i<L0; i = i + 1) begin
-		Vector#(2,UInt#(6)) s = unpack(pack(_SFT[i]));
-		_PERM[i].setIndex(s[1]);
-		_PERM2[i].setIndex(s[0]);
+		_PERM[i].setIndex(_SFT[i]);
+		_PERM2[i].setIndex(_SFT[i]);
 	end
 endrule
 
@@ -201,61 +198,6 @@ rule act5;
 	p15.deq;
 	p0.enq(1);
 endrule
-
-
-rule actx;
-	p0.deq;
-	p1.enq(1);
-endrule
-
-
-rule act6;
-	p1.deq;
-	p2.enq(1);
-endrule
-
-
-rule act7;
-	p2.deq;
-	p3.enq(1);
-endrule
-
-
-rule act8;
-	p3.deq;
-	p4.enq(1);
-endrule
-
-
-rule act9;
-	p4.deq;
-	p5.enq(1);
-endrule
-
-
-rule act10;
-	p5.deq;
-	p6.enq(1);
-endrule
-
-
-rule act11;
-	p6.deq;
-	p7.enq(1);
-endrule
-
-
-rule act12;
-	p7.deq;
-	p8.enq(1);
-endrule
-
-
-rule act13;
-	p8.deq;
-	p9.enq(1);
-endrule
-
 
 rule _LB;
 		let d1  <- lb0.get;
@@ -291,27 +233,29 @@ rule _MAC;
 endrule
 
 rule scale;
+		p0.deq;
+		p1.enq(1);
 		for(int i = 0;i<L0; i = i + 1) begin
-			m[i] <= fxptTruncate(fxptMult(_T0[i],weight[i]));
-			//dut[i].put(pack(_T0[i]),pack(weight[i]));
+			m[i] <= fxptTruncate(fxptAdd(_T0[i],weight[i]));
 			_L01[i] <= _L0[i];
 		end
 endrule
 
 rule _SAD2_1;
-		Vector#(L0,DataType) tempL0 = replicate(0);
-		for(int i=0; i<L0; i = i + 1) begin
-			tempL0[i] = m[i];
-			//FixedPoint#(30,2) a1 = unpack(dut[i].read_response());
-			//tempL0[i] = fxptTruncate(a1);
-		end
-		tL0 <= unpack(pack(tempL0)>> (_LFT[0] << 4));	
-		for(int i=0;i<L1;i=i+1) begin
-			bL1[i].a_b(m[2*i], m[2*i+1]);
-		end
+			p1.deq;
+			p2.enq(1);
+			Vector#(L0,DataType) tempL0 = replicate(0);
+			for(int i=0; i<L0; i = i + 1)
+				tempL0[i] = m[i];
+			tL0 <= unpack(pack(tempL0)>> (_LFT[0] << 4));	
+			for(int i=0;i<L1;i=i+1) begin
+				bL1[i].a_b(m[2*i], m[2*i+1]);
+			end
 endrule
 
 rule _SAD2_2;
+		p2.deq;
+		p3.enq(1);
 		Vector#(L0,DataType) temp = unpack(pack(tL0)<< (_LFT[1] << 4));	
 		for(int i=0;i<L1;i=i+1) begin
 				_T1[i] <=  bL1[i].c;
@@ -329,6 +273,8 @@ endrule
 
 
 rule _SAD4_1;
+		p3.deq;
+                p4.enq(1);
 		Vector#(L1,DataType) temp = replicate(0);
                 for(int i=0; i<L1; i = i + 1)
                                 temp[i] = _L1[i];
@@ -342,6 +288,8 @@ endrule
 
 
 rule _SAD4_2;
+		p4.deq;
+		p5.enq(1);
 		Vector#(L1,DataType) temp = unpack(pack(tL1)<< (_LFT[3] << 4));	
 		for(int i=0;i<L2;i=i+1) begin
 				_T2[i] <=  bL2[i].c;
@@ -360,6 +308,8 @@ rule _SAD4_2;
 endrule
 
 rule _SAD8_1;
+		 p5.deq;
+                 p6.enq(1);
 		 Vector#(L1,DataType) temp = replicate(0);
                  for(int i=0; i<L2; i = i + 1) begin
                         temp[i] = _L2[i];		
@@ -371,6 +321,8 @@ rule _SAD8_1;
 endrule
 
 rule _SAD8_2;
+		p6.deq;
+		p7.enq(1);
 		Vector#(L1,DataType) temp = unpack(pack(tL2) << (_LFT[5] << 4));	
 		for(int i=0;i<L3;i=i+1)begin
 				_T3[i] <=  bL3[i].c;
@@ -388,6 +340,8 @@ rule _SAD8_2;
 endrule
 
 rule _SAD16_1;
+		 p7.deq;
+		 p8.enq(1);
 		 Vector#(L1,DataType) temp = replicate(0);
                  for(int i=0; i<L1; i = i + 1) begin
                         temp[i] = _L3[i];
@@ -401,6 +355,8 @@ endrule
 
 rule _SAD16_2;
 
+		p8.deq;
+		p9.enq(1);
 		Vector#(L1,DataType) temp  = unpack(pack(tL3)<< (_LFT[7] << 4));
 		for(int i=0;i<L4;i=i+1)
 				_T4[i] <=  bL4[i].c;
@@ -508,7 +464,8 @@ method  Action loadConfig(UInt#(16) inx);
 		UInt#(9) x = unpack(truncate(pack(inx)));
 		lb0.reset(x);
 	end
-		
+	
+	
 	ldx <= ldx + 1;
 endmethod
 

@@ -1,6 +1,6 @@
 package datatypes;
 import FixedPoint::*;
-typedef FixedPoint#(10,6) DataType;
+typedef FixedPoint#(15,1) DataType;
 typedef UInt#(16) ImgWidth;
 typedef FixedPoint#(2,14) CoeffType;
 typedef UInt#(9) Width;

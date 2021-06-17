@@ -6,8 +6,8 @@ import SpecialFIFOs:: * ;
 import FixedPoint::*;
 
 interface Permute;
-        method Action put(Vector#(256,DataType) inR);
-        method Action setIndex(UInt#(9) inx2);
+        method Action put(Vector#(64,DataType) inR);
+        method Action setIndex(UInt#(6) inx);
 	method ActionValue#(DataType) get;
 endinterface
 
@@ -35,14 +35,14 @@ FIFOF#(Bit#(1)) p4 <- mkPipelineFIFOF;
 			i1 <= y[0];
 		else
 			i1 <= y[1];
-		p0.deq;
-		p1.enq(1);
+		//p0.deq;
+		//p1.enq(1);
 	endrule
 	
 	rule _S1;
 		Bit#(6) x = pack(probe);
-		p1.deq;
-		p2.enq(1);
+		//p1.deq;
+		//p2.enq(1);
 		Vector#(2,Vector#(16,DataType)) y = unpack(pack(i1));
 		if(x[4] == 0)
 			i2 <= y[0];
@@ -52,8 +52,8 @@ FIFOF#(Bit#(1)) p4 <- mkPipelineFIFOF;
 
 	rule _S2;
 		Bit#(6) x = pack(probe);
-		p2.deq;
-		p3.enq(1);
+		//p2.deq;
+		//p3.enq(1);
 		Vector#(2,Vector#(8,DataType)) y = unpack(pack(i2));
 		if(x[3] == 0)
 			i3 <= y[0];
@@ -63,30 +63,19 @@ FIFOF#(Bit#(1)) p4 <- mkPipelineFIFOF;
 	
 	
 	rule _S3;
-		p3.deq;
-		p4.enq(1);
+		//p3.deq;
+		//p4.enq(1);
 		outR                   <= unpack(truncate(pack(i3) >> (sft << 4)));	 
 	endrule
 
 		
 		
-        method Action put(Vector#(256,DataType) inR);
-		Vector#(4,Vector#(64,DataType)) x = unpack(pack(inR));
-		if(stripIndex == 0)
-			i0 <= x[0];
-		else if(stripIndex == 1)
-			i0 <= x[1];
-		else if(stripIndex == 2)
-			i0 <= x[2];
-		else if(stripIndex == 3)
-			i0 <= x[3];
-			
-		p0.enq(1); 
+        method Action put(Vector#(64,DataType) inR);
+			i0 <= inR;
+		//p0.enq(1); 
        	endmethod		
 	 
-        method Action setIndex(UInt#(9) inx2);
-		stripIndex <= truncate(inx2); 	
-		UInt#(6) inx = unpack(truncate(pack(inx2) >> 2));
+        method Action setIndex(UInt#(6) inx);
 		probe <= inx;
 		Bit#(6) x = pack(inx);
 		x[5] = 0;
@@ -96,7 +85,8 @@ FIFOF#(Bit#(1)) p4 <- mkPipelineFIFOF;
 	endmethod
 	
 	method ActionValue#(DataType) get;
-			p4.deq;
+			stripIndex <= 0;
+			//p4.deq;
 			return outR;
 	endmethod
 	

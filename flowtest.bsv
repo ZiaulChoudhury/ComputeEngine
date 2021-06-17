@@ -16,7 +16,7 @@ import pecore::*;
 #define L5 2
 
 
-#define TOTAL_CONFIG_WORDS (4+4+L0+L0+10+L1+L2+L3+L4+1)
+#define TOTAL_CONFIG_WORDS (4+4+L0+L0+L0+10+L1+L2+L3+L4+1)
 
 import "BDPI" function Int#(32) readConfig(Int#(32) cId);
 import "BDPI" function Action   initialize();
@@ -77,7 +77,7 @@ module mkFlowTest();
 		end
 	endrule
 
-	rule receive (count%1==0 && init == True);
+	rule receive (count%300==0 && init == True);
 		let b <- px.get;
 		for(int i=0;i<16; i = i + 1)
 			$write("%d", fxptGetInt(b[i]));
