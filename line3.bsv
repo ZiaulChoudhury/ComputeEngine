@@ -11,8 +11,8 @@ import cacheFIFO::*;
 //import sum8::*;
 
 interface Line3;
-	method Action  putFmap(DataType datas);
-	method ActionValue#(Vector#(64,DataType)) get;
+	method Action  putFmap(Bit#(64) datas);
+	method ActionValue#(Vector#(64,Bit#(64))) get;
 	method Action  reset(Width imageSize);	
         method Action  clean;
 	method  Action loadShift(UInt#(16) inx);
@@ -24,9 +24,9 @@ module mkLine3(Line3);
 //############### CONFIG PARAMETERS ######################################
 Reg#(Width)     alpha      <-  mkReg(8);
 Reg#(Width)     img        <-  mkReg(0);
-FIFOF#(Vector#(64,DataType)) outQ <- mkFIFOF;
+FIFOF#(Vector#(64,Bit#(64))) outQ <- mkFIFOF;
 CacheFIFOF  _LB[8];
-FIFOF#(DataType)                                instream <- mkFIFOF;
+FIFOF#(Bit#(64))                                instream <- mkFIFOF;
 Reg#(Width)                                 r1     <- mkReg(0);
 Reg#(Width)                                 c1     <- mkReg(0);
 Reg#(Width)                                 c2     <- mkReg(0);
@@ -58,19 +58,19 @@ for(int i=0;i<8; i = i + 1)
 
 	
         rule _serialShiftLeft(collectWindow == True);
-                        Vector#(8,DataType) dx = newVector;
-                        Vector#(64,DataType) dy = newVector;
+                        Vector#(8,Bit#(64)) dx = newVector;
+                        Vector#(64,Bit#(64)) dy = newVector;
                         for(Width i=0;i<8; i = i + 1)
                                 dx[i] = _LB[i].read;
-                        dy = unpack(extend(pack(dx)>>(16)));
+                        dy = unpack(extend(pack(dx)>>(64)));
 
                         let dd = instream.first; instream.deq;
                         dy[r1] = dd;
 			
-			Vector#(64,DataType) d = newVector;
-			Vector#(64,DataType) window = newVector;
+			Vector#(64,Bit#(64)) d = newVector;
+			Vector#(64,Bit#(64)) window = newVector;
                        	for(UInt#(8) i=0;i<8; i = i + 1) begin
-                                       Vector#(8,DataType) dmm <- _LB[i].enQdeQ(dy[i]);
+                                       Vector#(8,Bit#(64)) dmm <- _LB[i].enQdeQ(dy[i]);
                                        for(UInt#(8) j=0;j<8; j = j + 1) begin
                                          	window[i*8+j] = dmm[j];	
 					end
@@ -96,11 +96,11 @@ for(int i=0;i<8; i = i + 1)
         endrule
 
 	
-	method Action putFmap(DataType datas);
+	method Action putFmap(Bit#(64) datas);
 				instream.enq(datas);
 	endmethod
 	
-	method ActionValue#(Vector#(64,DataType)) get;
+	method ActionValue#(Vector#(64,Bit#(64))) get;
 			outQ.deq;
 			return outQ.first;
 	endmethod

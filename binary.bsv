@@ -33,7 +33,6 @@ module mkBinary(Binary);
 	
 	method DataType c;
 		//FixedPoint#(30,2) a1 = unpack(dut.read_response());
-
 		//if(op == 2)
 		//	return fxptTruncate(a1);
 		//else

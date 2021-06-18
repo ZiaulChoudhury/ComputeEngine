@@ -118,23 +118,23 @@ FIFOF#(Bit#(1)) p18 <- mkPipelineFIFOF;
 
 
 Reg#(Bit#(1)) combine[6];
-Reg#(Bit#(1)) outLevel[6];
+Reg#(UInt#(5)) lIn[6];
 
 combine [0] <- mkReg(0);
 combine [1] <- mkReg(0);
 combine [2] <- mkReg(0);
 combine [3] <- mkReg(0);
 
-outLevel[0] <- mkReg(0);
-outLevel[1] <- mkReg(0);
-outLevel[2] <- mkReg(0);
-outLevel[3] <- mkReg(0);
+lIn[0] <- mkReg(0);
+lIn[1] <- mkReg(0);
+lIn[2] <- mkReg(0);
+lIn[3] <- mkReg(0);
 
 Reg#(UInt#(11)) ldx <- mkReg(0);
 
 Permute _PERM[L0];
 Permute _PERM2[L0];
-Reg#(Bit#(1)) sel[L0];
+Reg#(Bit#(4)) sel[L0];
 
 for(int i=0;i<L0;i=i+1) begin
 	_PERM[i]  <- mkPermute;
@@ -260,7 +260,21 @@ endrule
 rule _LB;
 		let d1  <- lb0.get;
 		let d2 = fQ.first; fQ.deq;
-		tQ1 <= d1;
+		Vector#(L0,DataType) bx = newVector;
+		for(int i=0;i<L0; i = i + 1) begin
+				Vector#(4,DataType) sx = unpack(d1[i]);
+				UInt#(4) sxx = unpack(sel[i]>>1);
+				if(sxx == 0)
+					bx[i] = sx[0];
+				else if(sxx == 1)
+					bx[i] = sx[1];
+				else if(sxx == 0)
+					bx[i] = sx[2];
+				else if(sxx == 0)
+					bx[i] = sx[3];
+		end
+		
+		tQ1 <= bx;
 		tQ2 <= d2;
 		p10.enq(0);
 endrule
@@ -280,7 +294,7 @@ rule _MAC;
 		let d1 <- _PERM[i].get;
 		let d2 <- _PERM2[i].get;
 
-		if(sel[i] == 0) begin
+		if(sel[i][0] == 0) begin
 			_T0[i] <= d2;
 			_L0[i] <= d2;
 		end
@@ -428,7 +442,12 @@ endrule
 
 
 method Action put(Vector#(32, DataType) datas) if(outQ.notFull);
-		lb0.putFmap(datas[0]);	
+		Vector#(4,DataType) bx = newVector;
+		bx[0] = datas[lIn[0]];
+		bx[1] = datas[lIn[1]];
+		bx[2] = datas[lIn[2]];
+		bx[3] = datas[lIn[3]];	
+		lb0.putFmap(pack(bx));	
 		fQ.enq(datas);	
 endmethod
 	
@@ -446,8 +465,8 @@ method  Action loadConfig(UInt#(16) inx);
 	end
 	else if (ldx < (4+4)) begin	
 		for(int i = 0;i<3; i = i + 1)
-			outLevel[i] <= outLevel[i+1];
-		outLevel[3] <= unpack(truncate(pack(inx)));
+			lIn[i] <= lIn[i+1];
+		lIn[3] <= unpack(truncate(pack(inx)));
 	end	
 	else if(ldx < (4+4+10)) begin
 		for(int i = 0;i<9; i = i + 1)

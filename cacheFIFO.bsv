@@ -12,9 +12,9 @@ import Vector::*;
 #define DEBUG 0
 
 interface CacheFIFOF;
-        method Action enq(DataType a);
-	method ActionValue#(Vector#(CACHE,DataType)) enQdeQ(DataType a);
-	method DataType read;
+        method Action enq(Bit#(64) a);
+	method ActionValue#(Vector#(CACHE,Bit#(64))) enQdeQ(Bit#(64) a);
+	method Bit#(64) read;
 	method Action clean;
 	method Action dummy;
 endinterface
@@ -22,13 +22,13 @@ endinterface
 (*synthesize*)
 module mkCacheFIFOF(CacheFIFOF);
 	
-	Reg#(DataType) cache[CACHE];
+	Reg#(Bit#(64)) cache[CACHE];
 	for(int i = 0; i<CACHE; i = i + 1)
 			cache[i] <- mkReg(0);
-	FIFOF#(DataType) mem <- mkSizedBRAMFIFOF(WIDTH);
+	FIFOF#(Bit#(64)) mem <- mkSizedBRAMFIFOF(WIDTH);
 	Reg#(Width) _cx <- mkReg(0);	
 
-        method Action enq(DataType a);
+        method Action enq(Bit#(64) a);
 		if(_cx < CACHE) begin
 			cache[_cx] <= a;
 			_cx <= _cx + 1;
@@ -37,8 +37,8 @@ module mkCacheFIFOF(CacheFIFOF);
 			mem.enq(a);	
 	endmethod
         
-	method ActionValue#(Vector#(CACHE,DataType)) enQdeQ(DataType a);
-		Vector#(CACHE,DataType) x = newVector;
+	method ActionValue#(Vector#(CACHE,Bit#(64))) enQdeQ(Bit#(64) a);
+		Vector#(CACHE,Bit#(64)) x = newVector;
 		for(int i=0;i<CACHE; i = i + 1)
 			x[i] = cache[i];	
 		for(int i=1;i<CACHE; i = i + 1)
@@ -49,12 +49,12 @@ module mkCacheFIFOF(CacheFIFOF);
 	endmethod
 	
 
-	method DataType read;
+	method Bit#(64) read;
 		return cache[0];	
 	endmethod
 	
 	method Action dummy;
-			DataType x = 12;
+			Bit#(64) x = 12;
 			mem.enq(0);
 	endmethod
 
