@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#define K 5
+#define K 2
 int main()
 {
 	for(int i=0;i<8; i++)

@@ -77,6 +77,12 @@ module mkHardware(Stdin);
 		let d <- pe0.get;
 		pe1.put(d);		
 	endrule
+	
+	rule out_P0_P1_O(drO[0] == 2 && drI[1] == 0) ;
+		let d <- pe0.get;	
+		drain.enq0(pack(d));
+		pe1.put(d);		
+	endrule
 
 	rule out_P0(drO[0] == 1);
 		let d <- pe0.get;
@@ -118,7 +124,7 @@ module mkHardware(Stdin);
 	
 	method Action put(Bit#(512) datas);
 
-			     if(cfgCntr < TOTAL_CONFIG_WORDS)
+			if(cfgCntr < TOTAL_CONFIG_WORDS)
 				pe0.loadConfig(unpack(truncate(datas)));
 			else if (cfgCntr < 2*TOTAL_CONFIG_WORDS)	
 				pe1.loadConfig(unpack(truncate(datas)));

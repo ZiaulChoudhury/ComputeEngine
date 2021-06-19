@@ -79,12 +79,12 @@ module mkFlowTest();
 
 	rule receive (count%300==0 && init == True);
 		let b <- px.get;
-		for(int i=0;i<16; i = i + 1)
-			$write("%d", fxptGetInt(b[i]));
+		//for(int i=0;i<16; i = i + 1)
+			$write("%d", fxptGetInt(b[0]));
 		$display();
 		//$display(" %d %d %d %d %d %d %d %d ", fxptGetInt(b[0])/2, fxptGetInt(b[1]), fxptGetInt(b[2]), b[3],b[4],b[5],b[6],b[7]);
 		col <= col+1;
-		if(col == 195) begin
+		if(col == 224) begin
 			$finish(0);
 		end
 	endrule
