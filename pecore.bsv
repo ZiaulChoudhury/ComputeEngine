@@ -524,8 +524,12 @@ method  Action loadConfig(UInt#(16) inx);
         end
 
 	else begin
-		UInt#(9) x = unpack(truncate(pack(inx)));
-		lb0.reset(x);
+		//UInt#(9) x = unpack(truncate(pack(inx)));
+		UInt#(6)  kernel = unpack(truncate(pack(inx)));
+		UInt#(9) img = unpack(truncate(pack(inx)>>6));
+		//$display(" %d %d ", kernel, img);
+		//$finish(0);	
+		lb0.reset(img, extend(kernel));
 	end
 		
 	ldx <= ldx + 1;

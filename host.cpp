@@ -28,27 +28,38 @@
 
 unsigned char *input;
 unsigned int  *configuration;
+unsigned int  *image;
+#define IMG 256
 #define total_config_words (4+4+10+L0+L0+L0+L1+L2+L3+L4+1)
 extern "C" 
 {
         void  initialize()
         {
                         FILE *file = NULL;
+                        FILE *file2 = NULL;
 			int index = 0;
-                        file = fopen ("config2.txt", "r");
+                        file = fopen ("config5.txt", "r");
+                        file2 = fopen ("img.txt", "r");
 			configuration = (unsigned int*)malloc(sizeof(int)*1000000);
 			while(index < total_config_words){
 				fscanf(file,"%d",&configuration[index++]);
 			}
+				
+			index = 0;
+			image = (unsigned int*)malloc(sizeof(int)*1000000);
+			while(index < (IMG*IMG)){
+				fscanf(file2,"%d",&image[index++]);
+			}
+
 
         }
         int readConfig(int id)
 	{
 		return configuration[id];
         }
-        int readInput()
+        int readInput(int id)
 	{
-		return 0;
+		return image[id];
         }
 }
 

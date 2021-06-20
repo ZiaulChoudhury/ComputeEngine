@@ -13,8 +13,8 @@ import cacheFIFO::*;
 interface Line3;
 	method Action  putFmap(Bit#(64) datas);
 	method ActionValue#(Vector#(64,Bit#(64))) get;
-	method Action  reset(Width imageSize);	
-        method Action  clean;
+	method Action  reset(Width imageSize, Width a2);	
+        method Action  clean;	
 	method  Action loadShift(UInt#(16) inx);
 endinterface
 
@@ -23,7 +23,9 @@ module mkLine3(Line3);
 
 //############### CONFIG PARAMETERS ######################################
 Reg#(Width)     alpha      <-  mkReg(8);
+Reg#(Width)     alpha2     <-  mkReg(0);
 Reg#(Width)     img        <-  mkReg(0);
+Reg#(Width)     _img        <-  mkReg(0);
 FIFOF#(Vector#(64,Bit#(64))) outQ <- mkFIFOF;
 CacheFIFOF  _LB[8];
 FIFOF#(Bit#(64))                                instream <- mkFIFOF;
@@ -40,7 +42,7 @@ for(int i=0;i<8; i = i + 1)
 
 	//#################################### BLOCK LOADED HERE ##########################################	
 	rule _putDataInLB0 (collectWindow == False);
-                                if(c1 == img-1) begin
+                                if(c1 == _img-1) begin
                                         c1 <= 0;
                                         if(r1 >= 7) begin
                                                 collectWindow <= True;
@@ -51,8 +53,12 @@ for(int i=0;i<8; i = i + 1)
                                  else
                                  c1 <= c1 + 1;
 
-                                 let d = instream.first; instream.deq;
-                                 _LB[r1].enq(d);	
+				 if(c1 >= img && c1 <= (_img-1))
+					_LB[r1].enq(0);
+				 else begin
+                                 	let d = instream.first; instream.deq;
+                                 	_LB[r1].enq(d);	
+				end
         endrule
 	//###################################################################################################
 
@@ -64,8 +70,13 @@ for(int i=0;i<8; i = i + 1)
                                 dx[i] = _LB[i].read;
                         dy = unpack(extend(pack(dx)>>(64)));
 
-                        let dd = instream.first; instream.deq;
-                        dy[r1] = dd;
+			if(c1 >= img && c1 <= (_img-1)) begin
+				dy[r1] = 0;
+			end
+			else begin
+                        	let dd = instream.first; instream.deq;
+                        	dy[r1] = dd;
+			end
 			
 			Vector#(64,Bit#(64)) d = newVector;
 			Vector#(64,Bit#(64)) window = newVector;
@@ -76,20 +87,11 @@ for(int i=0;i<8; i = i + 1)
 					end
 			end
 			window[63]=0;
-						/*window[0] = d[0];
-						window[1] = d[1];
-						window[2] = d[2];	
-						window[3] = d[8];
-						window[4] = d[9];
-						window[5] = d[10];
-						window[6] = d[16];
-						window[7] = d[17];
-						window[8] = d[18];*/
-			if(c1 == img-1)
+			if(c1 == _img-1)
                                         c1 <= 0;
                         else
                                         c1 <= c1 + 1;
-                        if(c1 < img-extend(alpha-1)) begin
+                        if(c1 < _img-extend(alpha-1)) begin
 				outQ.enq(window); 
                         end
 			
@@ -116,8 +118,10 @@ for(int i=0;i<8; i = i + 1)
 		outQ.clear;
 	endmethod
 		
-	method Action reset(Width imageSize);	
+	method Action  reset(Width imageSize, Width a2);	
                 img        <= imageSize;
+		alpha2 	   <= a2;
+		_img 	   <= imageSize + 8 - a2;
 	endmethod
 	/*method  Action loadShift(UInt#(16) inx);
 		sum.loadShift(inx);

@@ -93,6 +93,12 @@ module mkHardware(Stdin);
                 let d <- pe1.get;
                 pe2.put(d);
         endrule
+	
+	rule out_P1_P2_O(drO[1] == 2 && drI[2] == 0) ;
+		let d <- pe1.get;	
+		drain.enq1(pack(d));
+		pe2.put(d);		
+	endrule
 
         rule out_P1(drO[1] == 1);
                 let d <- pe1.get;
@@ -103,6 +109,12 @@ module mkHardware(Stdin);
                 let d <- pe2.get;
                 pe3.put(d);
         endrule
+	
+	rule out_P2_P3_O(drO[2] == 2 && drI[3] == 0) ;
+		let d <- pe2.get;	
+		drain.enq2(pack(d));
+		pe3.put(d);		
+	endrule
 
         rule out_P2(drO[2] == 1);
                 let d <- pe2.get;
@@ -114,8 +126,7 @@ module mkHardware(Stdin);
                 drain.enq3(pack(d));
         endrule
 
-
-		
+	
 	method ActionValue#(Bit#(32)) get;
 		let d <- drain.deq;
 		return truncate(d);

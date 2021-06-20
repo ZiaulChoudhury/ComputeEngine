@@ -1,11 +1,11 @@
 from PIL import Image
 
-img = Image.new('RGB', size = (1366, 752))
+img = Image.new('RGB', size = (256, 256))
 
-file1 = open("data.txt", "r")
+file1 = open("img.txt", "r")
 data = file1.readlines()
 
-itr = 1
+itr = 0
 pixels = img.load()
 for i in range(img.size[1]):
     for j in range(img.size[0]):
