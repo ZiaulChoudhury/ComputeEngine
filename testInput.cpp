@@ -3,7 +3,7 @@
 int arr[100];
 int main()
 {
-	unsigned int img = 16;
+	unsigned int img = 256;
 	unsigned int kernel = 5;
 
 	unsigned int data = (img << 6) | kernel;

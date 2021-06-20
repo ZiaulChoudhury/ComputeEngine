@@ -56,7 +56,7 @@ Reg#(Vector#(L1,DataType)) tL3 <- mkRegU;
 Reg#(DataType) _T4[L4];
 Reg#(DataType) _L4[L1];
 
-FIFOF#(Vector#(32,DataType)) fQ <- mkSizedBRAMFIFOF(2048);
+FIFOF#(Vector#(32,DataType)) fQ <- mkSizedBRAMFIFOF(4096);
 Reg#(UInt#(12)) _SFT[L0];
 for(int i=0;i<L0;i=i+1)
 _SFT[i] <- mkReg(0);
@@ -486,8 +486,8 @@ method  Action loadConfig(UInt#(16) inx);
 	else if(ldx < (4+4+L0+L0+L0+10)) begin	
 		for(int i=0;i<L0-1; i = i + 1)
 			weight[i] <= weight[i+1];	
-		Int#(15) x = unpack(truncate(pack(inx)));
-		weight[L0-1] <= fromInt(x);
+		DataType wx = unpack(pack(inx));
+		weight[L0-1] <= wx;
 	end
 
 	else if (ldx < (4+4+L0+L0+L0+10+L1))begin	
@@ -524,11 +524,8 @@ method  Action loadConfig(UInt#(16) inx);
         end
 
 	else begin
-		//UInt#(9) x = unpack(truncate(pack(inx)));
 		UInt#(6)  kernel = unpack(truncate(pack(inx)));
 		UInt#(9) img = unpack(truncate(pack(inx)>>6));
-		//$display(" %d %d ", kernel, img);
-		//$finish(0);	
 		lb0.reset(img, extend(kernel));
 	end
 		

@@ -19,7 +19,7 @@ import pecore::*;
 #define TOTAL_CONFIG_WORDS (4+4+L0+L0+L0+10+L1+L2+L3+L4+1)
 
 import "BDPI" function Int#(32) readConfig(Int#(32) cId);
-import "BDPI" function Int#(32) readInput(Int#(32) cId);
+import "BDPI" function Int#(32) readInput(Int#(32) cxx);
 import "BDPI" function Action   initialize();
 
 #define IMG 16
@@ -29,8 +29,7 @@ import "BDPI" function Action   initialize();
 (*synthesize*)
 module mkFlowTest();
 	PECore px <- mkPECore;
-	Reg#(Int#(10)) rx <- mkReg(0);
-	Reg#(Int#(10)) cx <- mkReg(0);
+	Reg#(int) cx <- mkReg(0);
 	Reg#(int) col <- mkReg(0);
 	Reg#(int) cId <- mkReg(0);
 	Reg#(int) img <- mkReg(0);
@@ -59,33 +58,19 @@ module mkFlowTest();
 	endrule
 
 	rule send(count%10==0 && init == True);
-
-		if(cx == truncate((img-1))) begin
-			rx <= rx + 1;
-			cx <= 0;
-		end
-		else
-			cx <= cx + 1;
-		
-		if(cx < IMG && rx < IMG) begin
-		Int#(10) dx = (rx * cx + 10)%255;
-		DataType d = fromInt(dx);
-			px.put(unpack(zeroExtend(pack(d))));
-		end
-		else begin
-			Vector#(32,DataType) x = replicate(0);
-			px.put(x);
-		end
+		cx <= cx + 1;
+		Int#(32) pixel = readInput(cx);	
+		px.put(unpack(zeroExtend(pack(pixel))));
 	endrule
 
-	rule receive (count%300==0 && init == True);
+	rule receive (count%1==0 && init == True);
 		let b <- px.get;
-		for(int i=0;i<16; i = i + 1)
-			$write("%d", fxptGetInt(b[i]));
+		//for(int i=0;i<16; i = i + 1)
+			$write("%d", fxptGetInt(b[0]));
 		$display();
 		//$display(" %d %d %d %d %d %d %d %d ", fxptGetInt(b[0])/2, fxptGetInt(b[1]), fxptGetInt(b[2]), b[3],b[4],b[5],b[6],b[7]);
 		col <= col+1;
-		if(col == 143) begin
+		if(col == (252*252)-1) begin
 			$finish(0);
 		end
 	endrule
