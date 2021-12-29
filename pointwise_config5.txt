@@ -1,0 +1,116 @@
+Corresponding to each level of tree: when to add the remaining [1][1] values
+For pointwise: 0 1 0 0
+
+Default to zero again
+0 0 0 0
+
+For pointwise
+0 0
+0 0 
+0 0 
+0 0     
+0 0
+
+Index-array:
+Only first 2 will be filled, all others will be zero
+# The filled ones correspond to the previous channel that will be used
+0 1 2 3 4 8 9 10 11 12 16 17 18 19 20 24 0 1 2 3 4 8 9 10 11 12 16 17 18 19 20 24 25 26 27 28 32 33 34 35 25 26 27 28 32 33 34 35 36 36 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+# Leave it zero for convolution
+# which line buffer are we picking: could be 0, 1, 2, 3, 4
+# Stencil: 0 0 0 0, Pointwise: 0 0 0 1
+# LSB: 0 -> stencil, 1 -> pointwise
+# total 4 bits in one integer
+# in total 4 line buffers, remaining 3 bits select which line buffer
+
+# For pointwise,first 2 are ones, and all others are zero 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+Weights
+Put all weights 1 for pointwise
+23
+34
+38
+34
+23
+34
+49
+56
+49
+34
+38
+56
+64
+56
+38
+34
+23
+34
+38
+34
+23
+34
+49
+56
+49
+34
+38
+56
+64
+56
+38
+34
+49
+56
+49
+34
+23
+34
+38
+34
+49
+56
+49
+34
+23
+34
+38
+34
+23
+23
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+
+24 pairs: operation configuration
+Multplication: 2
+first value is 2, all others are zero
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 
+
+12 pairs
+put all zero
+1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 
+
+6 pairs
+put all zero
+1 1 1 1 1 1 0 0
+ 
+2 pairs
+put all zero
+1 1 0 0
+
+stencil size: 0
+(inputImageSize << 6) | kernelSize
+(256 << 6) | 5 [filter size]
+16389 

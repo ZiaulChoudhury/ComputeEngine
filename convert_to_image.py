@@ -2,7 +2,7 @@ from PIL import Image
 
 img = Image.new('RGB', size = (252, 252))
 
-file1 = open("fpgaOut.txt", "r")
+file1 = open("out.txt", "r")
 data = file1.readlines()
 
 itr = 0

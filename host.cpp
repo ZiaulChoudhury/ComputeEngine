@@ -38,8 +38,8 @@ extern "C"
                         FILE *file = NULL;
                         FILE *file2 = NULL;
 			int index = 0;
-                        file = fopen ("config5.txt", "r");
-                        file2 = fopen ("img.txt", "r");
+                        file = fopen ("config_new.txt", "r");
+                        file2 = fopen ("data.txt", "r");
 			configuration = (unsigned int*)malloc(sizeof(int)*1000000);
 			while(index < total_config_words){
 				fscanf(file,"%d",&configuration[index++]);

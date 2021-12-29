@@ -1,0 +1,30 @@
+=== Generated schedule for mkBinary ===
+
+Method schedule
+---------------
+Method: a_b
+Ready signal: True
+Conflict-free: get_operation
+Sequenced before: set_operation
+Sequenced before (restricted): a_b
+Sequenced after: c
+ 
+Method: c
+Ready signal: True
+Conflict-free: c, set_operation, get_operation
+Sequenced before: a_b
+ 
+Method: set_operation
+Ready signal: True
+Conflict-free: c
+Sequenced before (restricted): set_operation
+Sequenced after: a_b, get_operation
+ 
+Method: get_operation
+Ready signal: True
+Conflict-free: a_b, c, get_operation
+Sequenced before: set_operation
+ 
+Logical execution order: c, a_b, get_operation, set_operation
+
+========================================

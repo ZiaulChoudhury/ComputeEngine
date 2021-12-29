@@ -1,0 +1,41 @@
+=== Generated schedule for mkPermute ===
+
+Method schedule
+---------------
+Method: put
+Ready signal: True
+Conflict-free: setIndex
+Sequenced before (restricted): put
+Sequenced after (restricted): get
+ 
+Method: setIndex
+Ready signal: True
+Conflict-free: put
+Sequenced before (restricted): setIndex
+Sequenced after (restricted): get
+ 
+Method: get
+Ready signal: True
+Sequenced before (restricted): put, setIndex, get
+ 
+Rule schedule
+-------------
+Rule: _S0
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _S1
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _S2
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _S3
+Predicate: True
+Blocking rules: (none)
+ 
+Logical execution order: get, _S3, _S2, _S1, _S0, put, setIndex
+
+=========================================

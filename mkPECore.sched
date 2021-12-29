@@ -1,0 +1,511 @@
+=== Generated schedule for mkPECore ===
+
+Method schedule
+---------------
+Method: put
+Ready signal: (! ((fQ_rRdPtr.read + 14'd4096) == fQ_rWrPtr.read)) &&
+	      lb0.RDY_putFmap && outQ.notFull
+Sequenced before: get
+Sequenced before (restricted): loadConfig
+Conflicts: put
+ 
+Method: get
+Ready signal: outQ.i_notEmpty
+Conflict-free: loadConfig
+Sequenced after: put
+Conflicts: get
+ 
+Method: loadConfig
+Ready signal: True
+Conflict-free: get
+Sequenced after (restricted): put
+Conflicts: loadConfig
+ 
+Rule schedule
+-------------
+Rule: fQ_portA
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: fQ_portB
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: fQ_portB_read_data
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: loadShifts
+Predicate: ldx == 11'd271
+Blocking rules: (none)
+ 
+Rule: act0
+Predicate: p10_rv.port0__read[1] && (! p11_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: act1
+Predicate: p11_rv.port0__read[1] && (! p12_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: act2
+Predicate: p12_rv.port0__read[1] && (! p13_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: act3
+Predicate: p13_rv.port0__read[1] && (! p14_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: act4
+Predicate: p14_rv.port0__read[1] && (! p15_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: act5
+Predicate: p15_rv.port0__read[1] && (! p0_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: actx
+Predicate: p0_rv.port0__read[1] && (! p1_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: act6
+Predicate: p1_rv.port0__read[1] && (! p2_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: act7
+Predicate: p2_rv.port0__read[1] && (! p3_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: act8
+Predicate: p3_rv.port0__read[1] && (! p4_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: act9
+Predicate: p4_rv.port0__read[1] && (! p5_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: act10
+Predicate: p5_rv.port0__read[1] && (! p6_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: act11
+Predicate: p6_rv.port0__read[1] && (! p7_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: act12
+Predicate: p7_rv.port0__read[1] && (! p8_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: act13
+Predicate: p8_rv.port0__read[1] && (! p9_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: _LB
+Predicate: (! (fQ_rRdPtr.read == fQ_rWrPtr.read)) &&
+	   lb0.RDY_get && fQ_wDataOut.whas && (! p10_rv.port1__read[1])
+Blocking rules: (none)
+ 
+Rule: _LB1
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _LB2
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_1
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_2
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_3
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_4
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_5
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_6
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_7
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_8
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_9
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_10
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_11
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_12
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_13
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_14
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_15
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_16
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_17
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_18
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_19
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_20
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_21
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_22
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_23
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_24
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_25
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_26
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_27
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_28
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_29
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_30
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_31
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_32
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_33
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_34
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_35
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_36
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_37
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_38
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_39
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_40
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_41
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_42
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_43
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_44
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_45
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_46
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_47
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_48
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_49
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_50
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_51
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_52
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_53
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_54
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_55
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_56
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_57
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_58
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_59
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_60
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_61
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_62
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _MAC_63
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: scale
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _SAD2_1
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _SAD2_2
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _SAD4_1
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _SAD4_2
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _SAD8_1
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _SAD8_2
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _SAD16_1
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: _SAD16_2
+Predicate: True
+Blocking rules: (none)
+ 
+Rule: collect
+Predicate: p9_rv.port0__read[1] && outQ.i_notFull
+Blocking rules: (none)
+ 
+Logical execution order: put,
+			 get,
+			 collect,
+			 act13,
+			 act12,
+			 act11,
+			 act10,
+			 act9,
+			 act8,
+			 act7,
+			 act6,
+			 actx,
+			 act5,
+			 act4,
+			 act3,
+			 act2,
+			 act1,
+			 act0,
+			 _SAD16_2,
+			 _SAD16_1,
+			 _SAD8_2,
+			 _SAD8_1,
+			 _SAD4_2,
+			 _SAD4_1,
+			 _SAD2_2,
+			 _SAD2_1,
+			 scale,
+			 _MAC,
+			 _MAC_1,
+			 _MAC_2,
+			 _MAC_3,
+			 _MAC_4,
+			 _MAC_5,
+			 _MAC_6,
+			 _MAC_7,
+			 _MAC_8,
+			 _MAC_9,
+			 _MAC_10,
+			 _MAC_11,
+			 _MAC_12,
+			 _MAC_13,
+			 _MAC_14,
+			 _MAC_15,
+			 _MAC_17,
+			 _MAC_16,
+			 _MAC_18,
+			 _MAC_19,
+			 _MAC_20,
+			 _MAC_21,
+			 _MAC_22,
+			 _MAC_23,
+			 _MAC_24,
+			 _MAC_25,
+			 _MAC_26,
+			 _MAC_27,
+			 _MAC_28,
+			 _MAC_29,
+			 _MAC_30,
+			 _MAC_34,
+			 _MAC_31,
+			 _MAC_32,
+			 _MAC_33,
+			 _MAC_35,
+			 _MAC_36,
+			 _MAC_37,
+			 _MAC_38,
+			 _MAC_39,
+			 _MAC_40,
+			 _MAC_41,
+			 _MAC_42,
+			 _MAC_46,
+			 _MAC_43,
+			 _MAC_44,
+			 _MAC_45,
+			 _MAC_47,
+			 _MAC_48,
+			 _MAC_49,
+			 _MAC_50,
+			 _MAC_51,
+			 _MAC_52,
+			 _MAC_53,
+			 _MAC_54,
+			 _MAC_55,
+			 _MAC_56,
+			 _MAC_58,
+			 _MAC_57,
+			 _MAC_59,
+			 _MAC_60,
+			 _MAC_61,
+			 _MAC_62,
+			 _MAC_63,
+			 loadShifts,
+			 _LB1,
+			 _LB2,
+			 fQ_portB_read_data,
+			 _LB,
+			 loadConfig,
+			 fQ_portA,
+			 fQ_portB
+
+========================================

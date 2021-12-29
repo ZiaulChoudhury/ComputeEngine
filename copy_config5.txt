@@ -1,0 +1,120 @@
+line buffer window:
+0 1 2 3 4 5 6 7
+8 9 10 11 12 13 14 15
+16 17 18 19 20 21 22 23
+24 25 26 27 28 29 30 31
+32 33 34 35 36 37 38 39
+
+- Control words
+# Corresponding to each level of tree: when to add the remaining [1][1] values
+# Multiple reductions, and all those reductions give output at different levels of the tree.
+# These parameters tell me where to perform the extra carry over addition.
+0 0 1 1
+
+Default to zero again
+0 0 0 0
+
+Level wise; per level 2 values
+48 4    # Left shift by 48 and then right shift by 4 
+0 0 
+0 0 
+4 0     # Left shift by 4 and then do not right shift
+0 0
+
+Index-array:
+0 1 2 3 4 8 9 10 11 12 16 17 18 19 20 24 0 1 2 3 4 8 9 10 11 12 16 17 18 19 20 24 25 26 27 28 32 33 34 35 25 26 27 28 32 33 34 35 36 36 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+# 36 36 0 0 0 0 0 0 = - - - - 36 36 0 0 0 0 0 0 
+# - - - - 5 6 0 0 0 0 0 -> output of the 3rd level
+# Then add the above 2 levels
+
+# Leave it zero for convolution
+# which line buffer are we picking: could be 0, 1, 2, 3, 4
+# Stencil: 0 0 0 0, Pointwise: 0 0 0 1
+# LSB: 0 -> stencil, 1 -> pointwise
+# total 4 bits in one integer
+# in total 4 line buffers, remaining 3 bits select which line buffer
+# Zeros should be clubbed together -> depicting stencil operations. After that ones -> depicting pointwise operations.
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+Weights
+23
+34
+38
+34
+23
+34
+49
+56
+49
+34
+38
+56
+64
+56
+38
+34
+23
+34
+38
+34
+23
+34
+49
+56
+49
+34
+38
+56
+64
+56
+38
+34
+49
+56
+49
+34
+23
+34
+38
+34
+49
+56
+49
+34
+23
+34
+38
+34
+23
+23
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+
+24 pairs: operation configuration
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 
+
+12 pairs
+1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 
+
+6 pairs
+1 1 1 1 1 1 0 0
+ 
+2 pairs
+1 1 0 0
+
+(inputImageSize << 6) | kernelSize
+(256 << 6) | 5 [filter size]
+16389 
