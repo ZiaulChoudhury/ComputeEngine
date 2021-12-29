@@ -1,0 +1,148 @@
+# This file explains how a config file/control words are configured for Flowpix.
+# Comments start with a '#', and everything else is a part of config file.
+# A line buffer window's size is always set to 8 X 8. This is how a typical line buffer
+# index would look like:
+#  0  1  2  3  4  5  6  7
+#  8  9 10 11 12 13 14 15
+# 16 17 18 19 20 21 22 23
+# 24 25 26 27 28 29 30 31
+# 32 33 34 35 36 37 38 39
+# 40 41 42 43 44 45 46 47
+# 48 49 50 51 52 53 54 55
+# 56 57 58 59 60 61 62 63
+
+# In a given stencil, there can be multiple reductions, and all those reductions give output at different
+# levels of the tree. The below parameters tell me where to perform the extra carry over addition.
+# For instance, in this config, we use two 5x5 stencil operations. Meaning we have (25 + 25) reduction operations
+# which are to be distributed on a tree. This is broken down as: [16, 16] [8, 8] [1, 1]
+# [1, 1] will give me result on the 0'th depth
+# [8, 8] will give me result on the 3'rd depth -> hence we put a "1" in the 3rd index where we need to add the result from [1, 1] to the current result
+# [16, 16] will give result on the 4th depth -> hence we put a "1" in the 4th index.
+0 0 1 1
+
+# Default to zero for now. Ziaul sir will didn't explain this part yet.
+0 0 0 0
+
+# The below part is also related to the carry over addition/operations. Taking the example of this config file, 
+# how much should we left shift the [1, 1] values once they are ready to be added to the [8, 8] values. This addition
+# will happen on depth 3. Because we pick the [1, 1] values from depth 0, those are currently present on position:
+# (16 + 16 + 8 + 8) = 48. Hence we left shift by 48. Now the result of [8, 8] values is present at position: (2 + 2) = 4.
+# Hence we right shift these [1, 1] values by 4 in order to add properly. Why didn't we just left shift by 44? Because
+# that could lead to addition of redundant values to the first 4 bits. By left shift, we are making every to the left of
+# [1, 1] as zero.
+# Each line below depicts the [Left shift, Right shift] for each depth.
+48 4    # Left shift by 48 and then right shift by 4 
+0 0 
+0 0 
+4 0     # Left shift by 4 and then do not right shift
+0 0
+
+# This is how a 5x5 window from a line buffer would look like:
+#  0  1  2  3  4
+#  8  9 10 11 12
+# 16 17 18 19 20
+# 24 25 26 27 28
+# 32 33 34 35 36
+# We have 5 such windows, and we want to split these (25, 25) values into: [16, 16] [8, 8] [1, 1] values for proper reduction as a tree.
+# Below is how we do it.
+# Index-array:
+0 1 2 3 4 8 9 10 11 12 16 17 18 19 20 24 0 1 2 3 4 8 9 10 11 12 16 17 18 19 20 24 25 26 27 28 32 33 34 35 25 26 27 28 32 33 34 35 36 36 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+# Leave it zero for convolution
+# which line buffer are we picking: could be 0, 1, 2, 3, 4
+# Stencil: 0 0 0 0, Pointwise: 0 0 0 1
+# LSB: 0 -> stencil, 1 -> pointwise
+# total 4 bits in one integer
+# in total 4 line buffers, remaining 3 bits select which line buffer
+# Zeros should be clubbed together -> depicting stencil operations. After that ones -> depicting pointwise operations.
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+# Weights
+# These weights are corresponding to the index array indices. Hence these weights are also divided as: [16, 16] [8, 8] [1, 1]
+23
+34
+38
+34
+23
+34
+49
+56
+49
+34
+38
+56
+64
+56
+38
+34
+23
+34
+38
+34
+23
+34
+49
+56
+49
+34
+38
+56
+64
+56
+38
+34
+49
+56
+49
+34
+23
+34
+38
+34
+49
+56
+49
+34
+23
+34
+38
+34
+23
+23
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+
+# Below section sets the operation configuration in the tree. Initially we have [16, 16] [8, 8] [1, 1]. And from this, 24 pairs
+# need addition, and we can leave the [1, 1] out of the addition. Hence we set initial 24 pairs to "1", and everything else to 0.
+# We use different control words for each operation. Not sure of the mapping yet. For instance, we can use "2" for multiplication.
+# 24 pairs: operation configuration
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 
+
+# Here we have [8, 8] [4, 4] = 12 pairs
+# 12 pairs
+1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 
+
+# Here we have [4, 4] [2, 2] = 6 pairs
+# 6 pairs
+1 1 1 1 1 1 0 0
+ 
+# Here we have [2, 2] [1, 1] = 2 pairs only
+# 2 pairs
+1 1 0 0
+
+# This number is also needed in the config file.
+# (inputImageSize << 6) | kernelSize
+# (256 << 6) | 5 [filter size]
+16389 
