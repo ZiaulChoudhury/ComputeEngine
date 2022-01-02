@@ -59,70 +59,13 @@
 
 # Weights
 # These weights are corresponding to the index array indices. Hence these weights are also divided as: [16, 16] [8, 8] [1, 1]
-23
-34
-38
-34
-23
-34
-49
-56
-49
-34
-38
-56
-64
-56
-38
-34
-23
-34
-38
-34
-23
-34
-49
-56
-49
-34
-38
-56
-64
-56
-38
-34
-49
-56
-49
-34
-23
-34
-38
-34
-49
-56
-49
-34
-23
-34
-38
-34
-23
-23
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
+# Newlines and spaces do not matter, we can choose any. This is just for visual purpose and better understanding.
+23 34 38 34 23 34 49 56 49 34 38 56 64 56 38 34
+23 34 38 34 23 34 49 56 49 34 38 56 64 56 38 34
+49 56 49 34 23 34 38 34
+49 56 49 34 23 34 38 34
+23 23
+0 0 0 0 0 0 0 0 0 0 0 0 0 0
 
 # Below section sets the operation configuration in the tree. Initially we have [16, 16] [8, 8] [1, 1]. And from this, 24 pairs
 # need addition, and we can leave the [1, 1] out of the addition. Hence we set initial 24 pairs to "1", and everything else to 0.
