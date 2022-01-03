@@ -47,6 +47,16 @@
 # Below is how we do it.
 # Index-array:
 0 1 2 3 4 8 9 10 11 12 16 17 18 19 20 24 0 1 2 3 4 8 9 10 11 12 16 17 18 19 20 24 25 26 27 28 32 33 34 35 25 26 27 28 32 33 34 35 36 36 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+# If pointwise, then put the input index of the input vector.
+
+# Example
+# 0 0 0 0 0 0 0 0
+# 0 0 2 0
+# 1 0
+
+# One more line to depict: which line buffer is reading from which index.
+# -1 -> inactive line buffer
+-1 -1 -1
 
 # Leave it zero for convolution
 # which line buffer are we picking: could be 0, 1, 2, 3, 4
@@ -55,7 +65,9 @@
 # total 4 bits in one integer
 # in total 4 line buffers, remaining 3 bits select which line buffer
 # Zeros should be clubbed together -> depicting stencil operations. After that ones -> depicting pointwise operations.
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+# for 2 stencils -> 2 different line buffers.
+# 0, 1, 2 for line buffers. And 3 for pointwise.
 
 # Weights
 # These weights are corresponding to the index array indices. Hence these weights are also divided as: [16, 16] [8, 8] [1, 1]
